@@ -144,19 +144,16 @@ export default function Explore() {
   const [underlineStyle, setUnderlineStyle] = useState({});
   const tabRefs = useRef<Record<string, HTMLParagraphElement | null>>({});
 
-  // State for projects
   const [projects, setProjects] = useState<ProjectApi[]>([]);
   const [projectsLoading, setProjectsLoading] = useState(false);
   const [projectsError, setProjectsError] = useState<string | null>(null);
 
-  // State for hackathons
   const [hackathons, setHackathons] = useState<Hackathon[]>([]);
   const [hackathonsLoading, setHackathonsLoading] = useState(false);
   const [hackathonsError, setHackathonsError] = useState<string | null>(null);
 
   const { transformHackathonForCard } = useHackathonTransform();
 
-  // Fetch projects
   const fetchProjects = useCallback(async () => {
     try {
       setProjectsLoading(true);
