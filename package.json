@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint:fix": "eslint --fix .",
-    "prepare": "husky"
+    "prepare": "[ -z \"$CI\" ] && [ -z \"$VERCEL\" ] && husky || true"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
