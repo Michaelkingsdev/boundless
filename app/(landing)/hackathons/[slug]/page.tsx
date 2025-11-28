@@ -244,7 +244,10 @@ export default function HackathonPage() {
         )}
 
         {activeTab === 'discussions' && (
-          <HackathonDiscussions hackathonId={hackathonId} />
+          <HackathonDiscussions
+            hackathonId={hackathonId}
+            isRegistered={isRegistered}
+          />
         )}
 
         {activeTab === 'team-formation' && (
