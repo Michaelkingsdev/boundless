@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 export async function proxy(request: NextRequest) {
   const cookies = getSessionCookie(request);
   if (!cookies) {
-    return NextResponse.redirect(new URL('/auth?mode=signin', request.url));
+    return NextResponse.redirect(new URL('/register', request.url));
   }
   return NextResponse.next();
 }
