@@ -69,7 +69,7 @@ export function HackathonStickyCard(props: HackathonStickyCardProps) {
   // Determine if registration is allowed
   const canRegister = useMemo(() => {
     const now = new Date();
-    const policy = registrationDeadlinePolicy || 'before_submission_deadline';
+    const policy = registrationDeadlinePolicy || 'BEFORE_SUBMISSION_DEADLINE';
 
     switch (policy) {
       case 'BEFORE_START':
@@ -91,31 +91,20 @@ export function HackathonStickyCard(props: HackathonStickyCardProps) {
     const now = new Date();
     const beforeStart = startDate && now < new Date(startDate);
 
-    switch (registrationDeadlinePolicy || 'before_submission_deadline') {
+    switch (registrationDeadlinePolicy || 'BEFORE_SUBMISSION_DEADLINE') {
       case 'BEFORE_START':
         return 'Register';
       case 'BEFORE_SUBMISSION_DEADLINE':
         return beforeStart ? 'Register' : 'Join';
       case 'CUSTOM':
-        if (registrationDeadline) {
-          const custom = new Date(registrationDeadline);
-          const beforeCustom = now < custom;
-          if (beforeStart && beforeCustom) return 'Register';
-          if (!beforeStart && beforeCustom) return 'Register';
-        }
         return 'Register';
       default:
         return 'Join';
     }
-  }, [
-    registrationDeadlinePolicy,
-    canRegister,
-    startDate,
-    registrationDeadline,
-  ]);
+  }, [registrationDeadlinePolicy, canRegister, startDate]);
 
   // Redirect to auth if user not authenticated
-  const redirectToAuth = () => {
+  const handleRedirectToAuth = () => {
     const callbackUrl = encodeURIComponent(pathname);
     router.push(`/auth?mode=signin&callbackUrl=${callbackUrl}`);
   };
@@ -136,8 +125,7 @@ export function HackathonStickyCard(props: HackathonStickyCardProps) {
 
   return (
     <div className='sticky top-18 hidden lg:block'>
-      <Card className='overflow-hidden border border-[#a7f950]/30 bg-gradient-to-br from-[#a7f950]/10 to-transparent p-0'>
-        {/* Image Section - UNCHANGED */}
+      <Card className='overflow-hidden border border-[#a7f950]/30 bg-linear-to-br from-[#a7f950]/10 to-transparent p-0'>
         {imageUrl && (
           <div className='relative h-60 w-full'>
             <Image
@@ -192,17 +180,7 @@ export function HackathonStickyCard(props: HackathonStickyCardProps) {
             </div>
           )}
 
-          {/* Countdown Timer */}
-          {/* {timeRemaining.total > 0 && (
-                        <div className="text-center py-2 rounded-lg bg-gray-900/50 border border-gray-800">
-                            <div className="text-xs text-gray-400 mb-0.5 uppercase tracking-wide">
-                                {status === "ongoing" ? "Ends In" : "Starts In"}
-                            </div>
-                            <div className="text-base font-bold text-white">
-                                {formatCountdown(timeRemaining)}
-                            </div>
-                        </div>
-                    )} */}
+          {/* TODO: Add countdown UI — implement timeRemaining calculation and formatCountdown helper, then render "Ends In" / "Starts In" with formatted time */}
 
           {/* Date Info Section */}
           <div className='space-y-1.5 text-sm'>
@@ -248,7 +226,9 @@ export function HackathonStickyCard(props: HackathonStickyCardProps) {
             ) : !isRegistered ? (
               canRegister ? (
                 <Button
-                  onClick={!isAuthenticated ? redirectToAuth : onJoinClick}
+                  onClick={
+                    !isAuthenticated ? handleRedirectToAuth : onJoinClick
+                  }
                   className='w-full bg-[#a7f950] py-4 text-sm font-bold text-black hover:bg-[#8fd93f]'
                 >
                   <Calendar className='mr-1.5 h-3.5 w-3.5' />

@@ -1138,6 +1138,20 @@ export interface PublicHackathonsListResponse extends ApiResponse<PublicHackatho
   success: true;
 }
 
+/** Raw shape from the public hackathons list API (uses pagination object) */
+interface PublicHackathonsListRawData {
+  hackathons?: Hackathon[];
+  pagination?: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+  filters?: Record<string, unknown>;
+}
+
 export interface PublicHackathonsListFilters {
   page?: number;
   limit?: number;
@@ -1985,17 +1999,27 @@ export const getPublicHackathonsList = async (
   const queryString = params.toString();
   const url = `/hackathons${queryString ? `?${queryString}` : ''}`;
 
-  const res = await api.get<PublicHackathonsListResponse>(url);
+  const res = await api.get<ApiResponse<PublicHackathonsListRawData>>(url);
 
-  return (
-    res.data.data || {
+  const raw = res.data.data;
+  if (!raw) {
+    return {
       hackathons: [],
       hasMore: false,
       total: 0,
       currentPage: 1,
       totalPages: 0,
-    }
-  );
+    };
+  }
+
+  const pagination = raw.pagination;
+  return {
+    hackathons: raw.hackathons || [],
+    hasMore: pagination?.hasNext ?? false,
+    total: pagination?.total ?? 0,
+    currentPage: pagination?.page ?? 1,
+    totalPages: pagination?.totalPages ?? 0,
+  };
 };
 
 // Error handling utilities

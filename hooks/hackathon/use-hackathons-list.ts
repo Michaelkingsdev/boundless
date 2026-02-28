@@ -36,10 +36,10 @@ interface UseHackathonsListReturn {
   refetch: () => void;
 }
 
-export function useHackathonsList(
-  options: UseHackathonsListOptions = {}
-): UseHackathonsListReturn {
-  const { initialPage = 1, pageSize = 9, initialFilters = {} } = options;
+export const useHackathonsList: (
+  options: UseHackathonsListOptions
+) => UseHackathonsListReturn = (options: UseHackathonsListOptions = {}) => {
+  const { initialPage = 1, pageSize = 10, initialFilters = {} } = options;
 
   const [hackathons, setHackathons] = React.useState<Hackathon[]>([]);
   const [featuredHackathons, setFeaturedHackathons] = React.useState<
@@ -212,6 +212,7 @@ export function useHackathonsList(
           setHackathons(hackathonsList);
         }
       } catch (err) {
+        console.error('[useHackathonsList] fetchHackathons error', err);
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to fetch hackathons';
         setError(errorMessage);
@@ -255,4 +256,4 @@ export function useHackathonsList(
     loadMore,
     refetch,
   };
-}
+};
