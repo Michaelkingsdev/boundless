@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { MapPinIcon } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { Hackathon } from '@/lib/api/hackathons';
+import { cn } from '@/lib/utils';
 
 // type HackathonCardProps = {
 //   id: string;
@@ -176,8 +177,8 @@ function HackathonCard({
   categories,
   prizeTiers,
   isFullWidth = false,
-  // className,
-}: Hackathon & { isFullWidth?: boolean }) {
+  className,
+}: Hackathon & { isFullWidth?: boolean; className?: string }) {
   const router = useRouter();
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
     days: 0,
@@ -386,9 +387,11 @@ function HackathonCard({
   return (
     <div
       onClick={handleClick}
-      className={`group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-neutral-800 bg-[#0c0c0c] transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-black/40 ${
-        isFullWidth ? 'w-full' : 'max-w-[400px]'
-      }`}
+      className={cn(
+        'group flex cursor-pointer flex-col overflow-hidden rounded-xl border border-neutral-800 bg-[#0c0c0c] transition-all duration-300 hover:border-neutral-700 hover:shadow-lg hover:shadow-black/40',
+        isFullWidth ? 'w-full' : 'max-w-[400px]',
+        className
+      )}
     >
       {/* Image */}
       <div className='relative h-44 overflow-hidden sm:h-52'>

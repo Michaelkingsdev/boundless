@@ -66,11 +66,11 @@ const EmptyState: React.FC<EmptyStateProps> = ({
 
     switch (type) {
       case 'compact':
-        return `${baseStyle} px-4 py-2 text-sm bg-[#00D2A4] text-black hover:bg-[#00B894] focus:ring-[#00D2A4] shadow-sm`;
+        return `${baseStyle} px-4 py-2 text-sm bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-sm`;
       case 'custom':
         return `${baseStyle} px-6 py-3 bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500 shadow-md`;
       default:
-        return `${baseStyle} px-6 py-3 bg-[#00D2A4] text-black hover:bg-[#00B894] focus:ring-[#00D2A4] shadow-[0_2px_8px_rgba(0,210,164,0.2)]`;
+        return `${baseStyle} px-6 py-3 bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-primary shadow-[0_2px_8px_rgba(167,249,80,0.2)]`;
     }
   };
 
