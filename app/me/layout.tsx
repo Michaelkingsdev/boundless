@@ -20,11 +20,10 @@ export default function MeLayout({ children }: { children: React.ReactNode }) {
 
   const hackathonsCount = useMemo(() => {
     if (!profile) return 0;
-    const mergedIds = new Set([
-      ...(profile.hackathonsAsParticipant?.map((h: any) => h.id) || []),
-      ...(profile.userHackathons?.map((h: any) => h.id) || []),
-    ]);
-    return mergedIds.size;
+
+    const joined = (profile as any)?.user?.joinedHackathons || [];
+
+    return joined.length;
   }, [profile]);
 
   if (isLoading) {

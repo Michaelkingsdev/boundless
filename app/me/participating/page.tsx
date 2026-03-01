@@ -36,50 +36,92 @@ export default function ParticipatingPage() {
   );
 
   const unifiedList = useMemo(() => {
-    if (!user?.profile) return [];
+    if (!user?.profile) {
+      return [];
+    }
 
-    const hackathonsAsParticipant = user.profile.hackathonsAsParticipant || [];
-    const userHackathons = user.profile.userHackathons || [];
+    const profile = user.profile as any;
+    const joinedHackathons = profile.user?.joinedHackathons || [];
+    const hackathonsAsParticipant = profile.hackathonsAsParticipant || [];
+    const submissions = profile.user?.hackathonSubmissionsAsParticipant || [];
+
+    // Map hackathons from joined list
+    const typedJoinedHackathons = joinedHackathons.map((h: any) => {
+      const hackathonData = h.hackathon || h;
+      return {
+        ...hackathonData,
+        type: 'hackathon' as const,
+      };
+    });
+
+    // Map hackathons from participating list (preferred source based on logs)
+    const typedParticipatingHackathons = hackathonsAsParticipant.map(
+      (p: any) => {
+        const hackathonData = p.hackathon;
+        return {
+          ...hackathonData,
+          type: 'hackathon' as const,
+        };
+      }
+    );
+
+    // Map hackathons from submissions
+    const typedSubmissionHackathons = submissions
+      .filter((s: any) => s.hackathon)
+      .map((s: any) => ({
+        ...s.hackathon,
+        type: 'hackathon' as const,
+      }));
 
     // Merge and deduplicate by ID
-    const merged = [...hackathonsAsParticipant, ...userHackathons];
+    const merged = [
+      ...typedParticipatingHackathons,
+      ...typedJoinedHackathons,
+      ...typedSubmissionHackathons,
+    ];
+
     const seen = new Set();
-    const deduplicated = merged.filter(h => {
-      if (seen.has(h.id)) return false;
-      seen.add(h.id);
+    const deduplicated = merged.filter((item: any) => {
+      if (!item.id || seen.has(item.id)) return false;
+      seen.add(item.id);
       return true;
     });
 
     // Sort logic: active/ongoing first, then upcoming, then completed
-    return deduplicated.sort((a, b) => {
-      const getPriority = (h: Hackathon) => {
+    const sorted = deduplicated.sort((a: any, b: any) => {
+      const getPriority = (h: any) => {
         const now = new Date().getTime();
+        if (!h.startDate || !h.submissionDeadline) return 1;
+
         const start = new Date(h.startDate).getTime();
         const deadline = new Date(h.submissionDeadline).getTime();
 
-        if (now >= start && now <= deadline) return 0; // Ongoing
-        if (now < start) return 1; // Upcoming
-        return 2; // Completed
+        if (now >= start && now <= deadline) return 0;
+        if (now < start) return 1;
+        return 2;
       };
 
       return getPriority(a) - getPriority(b);
     });
+
+    return sorted;
   }, [user]);
 
   const filteredList = useMemo(() => {
-    if (activeTab === 'all') return unifiedList;
+    if (activeTab === 'projects') return []; // Keep projects tab empty as requested
+
+    let result = unifiedList;
     if (activeTab === 'hackathons') {
-      // In this context, "hackathons" might mean ones you are participating in vs "projects" (ones you created/lead)
-      // But the prompt says "Each tab filters from the unified list".
-      // Usually "Projects" refers to hackathons where you have a submission.
-      return unifiedList; // Placeholder for specific filter logic if needed
+      result = unifiedList.filter((item: any) => item.type === 'hackathon');
     }
-    return unifiedList;
+    return result;
   }, [unifiedList, activeTab]);
 
   const getSubmissionStage = (hackathonId: string): SubmissionStage => {
-    const submission = user?.profile?.hackathonSubmissionsAsParticipant?.find(
-      s => s.hackathonId === hackathonId
+    const submission = (
+      user?.profile as any
+    )?.user?.hackathonSubmissionsAsParticipant?.find(
+      (s: any) => s.hackathonId === hackathonId
     );
 
     if (!submission) return 'Not Started';
@@ -162,25 +204,45 @@ export default function ParticipatingPage() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className='relative'
+                className='group relative'
               >
-                <HackathonCard
-                  {...hackathon}
-                  isFullWidth
-                  className='hover:shadow-primary/5 rounded-4xl border-white/5 transition-all duration-500 hover:border-white/20 hover:shadow-2xl'
-                />
-                <div className='pointer-events-none absolute right-3 bottom-3 z-20'>
-                  <ProgressIndicator stage={getSubmissionStage(hackathon.id)} />
+                <div className='relative overflow-hidden rounded-4xl'>
+                  <HackathonCard
+                    {...hackathon}
+                    isFullWidth
+                    target='_blank'
+                    className='hover:shadow-primary/5 border-white/5 transition-all duration-500 hover:border-white/20 hover:shadow-2xl'
+                  />
+                  <div className='pointer-events-none absolute right-4 bottom-4 z-20 transition-transform duration-300 group-hover:scale-105'>
+                    <ProgressIndicator
+                      stage={getSubmissionStage(hackathon.id)}
+                    />
+                  </div>
                 </div>
               </motion.div>
             ))}
           </motion.div>
         ) : (
           <EmptyState
-            title='No active engagements'
-            description="You haven't joined any hackathons yet. Explore our open events to get started!"
-            buttonText='Explore Hackathons'
-            onAddClick={() => (window.location.href = '/hackathons')}
+            title={
+              activeTab === 'projects'
+                ? 'No active projects'
+                : 'No active engagements'
+            }
+            description={
+              activeTab === 'projects'
+                ? "You haven't participating in any projects yet. Explore our community projects to get started!"
+                : "You haven't joined any hackathons yet. Explore our open events to get started!"
+            }
+            buttonText={
+              activeTab === 'projects'
+                ? 'Explore Projects'
+                : 'Explore Hackathons'
+            }
+            onAddClick={() =>
+              (window.location.href =
+                activeTab === 'projects' ? '/projects' : '/hackathons')
+            }
           />
         )}
       </AnimatePresence>

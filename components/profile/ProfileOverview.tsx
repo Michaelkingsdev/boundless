@@ -21,9 +21,11 @@ export default function ProfileOverview({
   isAuthenticated,
   isOwnProfile,
 }: ProfileOverviewProps) {
+  const nameParts = user.name?.split(' ') || [];
   const profileData: UserProfile = {
     username: user.username,
-    displayName: `${user.name?.split(' ')[0] || ''} ${user.name?.split(' ').slice(1).join(' ') || ''}`,
+    displayName:
+      `${nameParts[0] || ''} ${nameParts.slice(1).join(' ') || ''}`.trim(),
     bio: user.profile?.bio || 'No bio available',
     avatarUrl: user.image || '/',
     socialLinks: user.profile?.socialLinks || {},
@@ -39,8 +41,8 @@ export default function ProfileOverview({
   const organizationsData: Organization[] =
     user.members?.map(org => {
       return {
-        name: org.organization.name,
-        avatarUrl: org.organization.logo || '/blog1.jpg',
+        name: org.organization?.name || 'Unknown Organization',
+        avatarUrl: org.organization?.logo || '/blog1.jpg',
         id: org.organizationId,
       };
     }) || [];

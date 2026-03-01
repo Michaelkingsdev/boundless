@@ -158,7 +158,13 @@ function calculateTimeRemaining(targetDate: string): TimeRemaining {
 //   }
 // }
 
-function HackathonCard({
+interface HackathonCardProps extends Hackathon {
+  isFullWidth?: boolean;
+  className?: string;
+  target?: string;
+}
+
+export const HackathonCard = ({
   id,
   slug,
   name,
@@ -178,7 +184,8 @@ function HackathonCard({
   prizeTiers,
   isFullWidth = false,
   className,
-}: Hackathon & { isFullWidth?: boolean; className?: string }) {
+  target,
+}: HackathonCardProps) => {
   const router = useRouter();
   const [timeRemaining, setTimeRemaining] = useState<TimeRemaining>({
     days: 0,
@@ -190,7 +197,12 @@ function HackathonCard({
 
   const handleClick = () => {
     const slugPath = slug || id || '';
-    router.push(`/hackathons/${slugPath}`);
+    const url = `/hackathons/${slugPath}`;
+    if (target === '_blank') {
+      window.open(url, '_blank');
+    } else {
+      router.push(url);
+    }
   };
 
   // Determine top badge status using raw dates
@@ -353,9 +365,9 @@ function HackathonCard({
   // })();
 
   const CategoriesDisplay = ({
-    categoriesList,
+    categoriesList = [],
   }: {
-    categoriesList: string[];
+    categoriesList?: string[];
   }) => {
     const MAX_VISIBLE = 3;
 
@@ -414,13 +426,17 @@ function HackathonCard({
         </div>
 
         <div className='absolute bottom-3 left-3 flex items-center gap-2'>
-          <div
-            style={{ backgroundImage: `url(${organization.logo})` }}
-            className='size-7 rounded-full border border-white/20 bg-white bg-cover bg-center'
-          />
-          <span className='text-xs font-medium text-white/90 drop-shadow-md'>
-            {organization.name}
-          </span>
+          {organization?.logo && (
+            <div
+              style={{ backgroundImage: `url(${organization.logo})` }}
+              className='size-7 rounded-full border border-white/20 bg-white bg-cover bg-center'
+            />
+          )}
+          {organization?.name && (
+            <span className='text-xs font-medium text-white/90 drop-shadow-md'>
+              {organization.name}
+            </span>
+          )}
         </div>
       </div>
 
@@ -481,6 +497,6 @@ function HackathonCard({
       </div>
     </div>
   );
-}
+};
 
 export default HackathonCard;

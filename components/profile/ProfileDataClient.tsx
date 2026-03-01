@@ -46,8 +46,8 @@ export default function ProfileDataClient({ user }: ProfileDataClientProps) {
   const isOwnProfile = userData.id === currentUser?.id;
   const organizationsData =
     userData.members?.map(org => ({
-      name: org.organization.name,
-      avatarUrl: org.organization.logo || '/blog1.jpg',
+      name: org.organization?.name || 'Unknown Organization',
+      avatarUrl: org.organization?.logo || '/blog1.jpg',
     })) || [];
 
   return (
