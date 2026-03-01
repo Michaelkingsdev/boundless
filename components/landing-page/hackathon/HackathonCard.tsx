@@ -345,7 +345,7 @@ export const HackathonCard = ({
 
       return () => clearInterval(interval);
     }
-  }, [status, startDate, submissionDeadline]);
+  }, [status, startDate, submissionDeadline, getTopBadgeStatus]);
 
   const bottomStatusInfo = getBottomStatusInfo();
   const topBadgeStatus = getTopBadgeStatus();

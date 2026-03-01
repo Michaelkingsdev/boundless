@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useAuthStatus } from '@/hooks/use-auth';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,51 +14,36 @@ import { cn } from '@/lib/utils';
 import { Hackathon } from '@/lib/api/hackathons';
 import EmptyState from '@/components/EmptyState';
 
-interface ExtendedUser {
-  profile?: {
-    hackathonsAsParticipant?: Hackathon[];
-    userHackathons?: Hackathon[];
-    hackathonSubmissionsAsParticipant?: Array<{
-      id: string;
-      hackathonId: string;
-      status: string;
-      submittedAt: string;
-    }>;
-  };
+type TabType = 'all' | 'hackathons' | 'projects';
+
+interface UnifiedItem extends Hackathon {
+  type: 'hackathon';
 }
 
 export default function ParticipatingPage() {
-  const { user, isLoading } = useAuthStatus() as {
-    user: ExtendedUser | null;
-    isLoading: boolean;
-  };
-  const [activeTab, setActiveTab] = useState<'all' | 'hackathons' | 'projects'>(
-    'all'
-  );
+  const router = useRouter();
+  const { user, isLoading } = useAuthStatus();
+  const [activeTab, setActiveTab] = useState<TabType>('all');
 
-  const unifiedList = useMemo(() => {
-    if (!user?.profile) {
+  const handleTabChange = (value: string) => {
+    setActiveTab(value as TabType);
+  };
+
+  const unifiedList = useMemo<UnifiedItem[]>(() => {
+    const profile = user?.profile;
+    if (!profile) {
       return [];
     }
 
-    const profile = user.profile as any;
     const joinedHackathons = profile.user?.joinedHackathons || [];
     const hackathonsAsParticipant = profile.hackathonsAsParticipant || [];
     const submissions = profile.user?.hackathonSubmissionsAsParticipant || [];
 
     // Map hackathons from joined list
-    const typedJoinedHackathons = joinedHackathons.map((h: any) => {
-      const hackathonData = h.hackathon || h;
-      return {
-        ...hackathonData,
-        type: 'hackathon' as const,
-      };
-    });
-
-    // Map hackathons from participating list (preferred source based on logs)
-    const typedParticipatingHackathons = hackathonsAsParticipant.map(
-      (p: any) => {
-        const hackathonData = p.hackathon;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const typedJoinedHackathons: UnifiedItem[] = joinedHackathons.map(
+      (h: any) => {
+        const hackathonData = h.hackathon || h;
         return {
           ...hackathonData,
           type: 'hackathon' as const,
@@ -65,9 +51,22 @@ export default function ParticipatingPage() {
       }
     );
 
+    // Map hackathons from participating list (preferred source based on logs)
+    const typedParticipatingHackathons: UnifiedItem[] =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      hackathonsAsParticipant.map((p: any) => {
+        const hackathonData = p.hackathon;
+        return {
+          ...hackathonData,
+          type: 'hackathon' as const,
+        };
+      });
+
     // Map hackathons from submissions
-    const typedSubmissionHackathons = submissions
+    const typedSubmissionHackathons: UnifiedItem[] = submissions
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .filter((s: any) => s.hackathon)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       .map((s: any) => ({
         ...s.hackathon,
         type: 'hackathon' as const,
@@ -80,16 +79,16 @@ export default function ParticipatingPage() {
       ...typedSubmissionHackathons,
     ];
 
-    const seen = new Set();
-    const deduplicated = merged.filter((item: any) => {
+    const seen = new Set<string>();
+    const deduplicated = merged.filter(item => {
       if (!item.id || seen.has(item.id)) return false;
       seen.add(item.id);
       return true;
     });
 
     // Sort logic: active/ongoing first, then upcoming, then completed
-    const sorted = deduplicated.sort((a: any, b: any) => {
-      const getPriority = (h: any) => {
+    const sorted = deduplicated.sort((a, b) => {
+      const getPriority = (h: UnifiedItem) => {
         const now = new Date().getTime();
         if (!h.startDate || !h.submissionDeadline) return 1;
 
@@ -112,27 +111,34 @@ export default function ParticipatingPage() {
 
     let result = unifiedList;
     if (activeTab === 'hackathons') {
-      result = unifiedList.filter((item: any) => item.type === 'hackathon');
+      result = unifiedList.filter(item => item.type === 'hackathon');
     }
     return result;
   }, [unifiedList, activeTab]);
 
   const getSubmissionStage = (hackathonId: string): SubmissionStage => {
-    const submission = (
-      user?.profile as any
-    )?.user?.hackathonSubmissionsAsParticipant?.find(
-      (s: any) => s.hackathonId === hackathonId
-    );
+    const submission =
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      user?.profile?.user?.hackathonSubmissionsAsParticipant?.find(
+        (s: any) => s.hackathonId === hackathonId
+      );
 
     if (!submission) return 'Not Started';
 
-    const status = submission.status.toUpperCase();
+    const statusRaw = submission.status;
+    if (!statusRaw || typeof statusRaw !== 'string') return 'In Progress';
+
+    const status = statusRaw.toUpperCase();
     if (status === 'DRAFT') return 'In Progress';
     if (status === 'SUBMITTED') return 'Submitted';
     if (status === 'UNDER_REVIEW') return 'Under Review';
     if (status === 'WINNER' || status === 'COMPLETED') return 'Results Pending';
 
     return 'In Progress';
+  };
+
+  const handleEmptyStateClick = () => {
+    router.push(activeTab === 'projects' ? '/projects' : '/hackathons');
   };
 
   if (isLoading) {
@@ -157,7 +163,7 @@ export default function ParticipatingPage() {
 
         <Tabs
           value={activeTab}
-          onValueChange={v => setActiveTab(v as any)}
+          onValueChange={handleTabChange}
           className='w-full md:w-auto'
         >
           <TabsList className='relative h-11 w-full justify-start rounded-full bg-zinc-900/50 p-1 md:w-auto'>
@@ -231,18 +237,15 @@ export default function ParticipatingPage() {
             }
             description={
               activeTab === 'projects'
-                ? "You haven't participating in any projects yet. Explore our community projects to get started!"
-                : "You haven't joined any hackathons yet. Explore our open events to get started!"
+                ? "You haven't participated in any projects yet. Explore our community projects to get started!"
+                : "You haven't participated in any hackathons yet. Explore our open events to get started!"
             }
             buttonText={
               activeTab === 'projects'
                 ? 'Explore Projects'
                 : 'Explore Hackathons'
             }
-            onAddClick={() =>
-              (window.location.href =
-                activeTab === 'projects' ? '/projects' : '/hackathons')
-            }
+            onAddClick={handleEmptyStateClick}
           />
         )}
       </AnimatePresence>

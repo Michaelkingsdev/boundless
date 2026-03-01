@@ -25,10 +25,9 @@ export interface EarningsData {
   activities: EarningActivity[];
 }
 
-export interface GetEarningsResponse extends ApiResponse<EarningsData> {
-  success: true;
-  data: EarningsData;
-}
+export type GetEarningsResponse =
+  | { success: true; data: EarningsData; message?: string }
+  | { success: false; error: string; message?: string };
 
 export interface ClaimEarningRequest {
   activityId: string;

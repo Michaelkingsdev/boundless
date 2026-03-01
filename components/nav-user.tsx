@@ -32,7 +32,7 @@ export function NavUser({
   user: {
     name: string;
     email: string;
-    image: string;
+    image: string | null;
   };
 }) {
   const { isMobile } = useSidebar();
@@ -47,7 +47,7 @@ export function NavUser({
               className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground hover:bg-sidebar-accent/50 transition-colors'
             >
               <Avatar className='border-sidebar-border h-9 w-9 rounded-lg border-2'>
-                <AvatarImage src={user.image} alt={user.name} />
+                <AvatarImage src={user.image || undefined} alt={user.name} />
                 <AvatarFallback className='from-primary/20 to-primary/10 text-primary rounded-lg bg-gradient-to-br font-semibold'>
                   {user.name
                     .split(' ')
@@ -75,7 +75,7 @@ export function NavUser({
             <DropdownMenuLabel className='p-0 font-normal'>
               <div className='flex items-center gap-3 px-2 py-2 text-left'>
                 <Avatar className='border-border h-10 w-10 rounded-lg border-2'>
-                  <AvatarImage src={user.image} alt={user.name} />
+                  <AvatarImage src={user.image || undefined} alt={user.name} />
                   <AvatarFallback className='from-primary/20 to-primary/10 text-primary rounded-lg bg-gradient-to-br font-semibold'>
                     {user.name
                       .split(' ')

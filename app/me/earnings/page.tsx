@@ -81,7 +81,9 @@ const BreakdownItem: React.FC<BreakdownItemProps> = ({
       </div>
       <span className='font-medium'>{label}</span>
     </div>
-    <span className='font-semibold'>${value.toLocaleString()}</span>
+    <span className='font-semibold'>
+      ${(Number(value) || 0).toLocaleString()}
+    </span>
   </div>
 );
 
@@ -106,7 +108,9 @@ const ActivityItem: React.FC<ActivityItemProps> = ({ activity }) => (
       </div>
     </div>
     <div className='text-right'>
-      <p className='text-lg font-bold'>${activity.amount.toLocaleString()}</p>
+      <p className='text-lg font-bold'>
+        ${(Number(activity.amount) || 0).toLocaleString()}
+      </p>
       {activity.currency && (
         <p className='text-muted-foreground text-xs'>{activity.currency}</p>
       )}
@@ -146,8 +150,10 @@ const EarningsPage: React.FC = () => {
     const fetchData = async () => {
       try {
         const res = await getUserEarnings();
-        if (res.success && res.data) {
+        if (res.success) {
           setData(res.data);
+        } else {
+          toast.error(res.error || 'Failed to load earnings data');
         }
       } catch (error) {
         console.error('Failed to fetch earnings:', error);

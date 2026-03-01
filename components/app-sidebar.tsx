@@ -64,7 +64,10 @@ const getNavigationData = (counts?: { participating?: number }) => ({
       title: 'Participating',
       url: '/me/participating',
       icon: IconShieldCheck,
-      badge: counts?.participating?.toString(),
+      badge:
+        counts?.participating && counts.participating > 0
+          ? counts.participating.toString()
+          : undefined,
     },
     {
       title: 'Submissions',
@@ -99,10 +102,10 @@ const getNavigationData = (counts?: { participating?: number }) => ({
   ],
 });
 
-interface userData {
+interface UserData {
   name: string;
   email: string;
-  image: string;
+  image: string | null;
 }
 
 export function AppSidebar({
@@ -110,7 +113,7 @@ export function AppSidebar({
   counts,
   ...props
 }: {
-  user: userData;
+  user: UserData;
   counts?: { participating?: number };
 } & React.ComponentProps<typeof Sidebar>) {
   const navigationData = React.useMemo(

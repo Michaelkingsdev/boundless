@@ -111,6 +111,15 @@ export interface User {
     status: string;
     rank?: number | null;
     submittedAt: string;
+    hackathonId: string;
+    hackathon?: any;
+  }>;
+  joinedHackathons?: Array<{
+    id: string;
+    userId: string;
+    hackathonId: string;
+    registrationDate: string;
+    hackathon?: any;
   }>;
   profile?: Record<string, unknown>;
   stats?: {
@@ -251,6 +260,13 @@ export interface GetMeResponse {
     updatedAt: string;
     project?: Record<string, unknown>;
     organization?: Record<string, unknown>;
+  }>;
+  hackathonsAsParticipant?: Array<{
+    id: string;
+    hackathonId: string;
+    participantId: string;
+    status: string;
+    hackathon?: any;
   }>;
 }
 

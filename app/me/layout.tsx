@@ -15,12 +15,14 @@ export default function MeLayout({ children }: { children: React.ReactNode }) {
   const userData = {
     name: name || '',
     email,
-    image: profile?.image || userImage,
+    image:
+      (profile as any)?.user?.image || (profile as any)?.image || userImage,
   };
 
   const hackathonsCount = useMemo(() => {
     if (!profile) return 0;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const joined = (profile as any)?.user?.joinedHackathons || [];
 
     return joined.length;

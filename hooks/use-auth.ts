@@ -11,6 +11,7 @@ export function useAuth(requireAuth = true) {
   } = authClient.useSession();
 
   const router = useRouter();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 
@@ -97,6 +98,7 @@ export function useOptionalAuth() {
 
 export function useAuthStatus() {
   const { data: session, isPending: sessionPending } = authClient.useSession();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [userProfile, setUserProfile] = useState<any>(null);
   const [profileLoading, setProfileLoading] = useState(false);
 

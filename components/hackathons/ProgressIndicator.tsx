@@ -50,7 +50,7 @@ export function ProgressIndicator({
         className
       )}
     >
-      <div className={cn('mr-1.5 h-1.5 w-1.5 rounded-full bg-current')} />
+      <div className='mr-1.5 h-1.5 w-1.5 rounded-full bg-current' />
       {config.label}
     </div>
   );
