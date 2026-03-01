@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useMemo } from 'react';
-import { BlogPost } from '@/types/blog';
+import { MdxBlogPost } from '@/lib/mdx';
 import BlogCard from './BlogCard';
 import { Search, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -16,7 +16,7 @@ import {
 import { cn } from '@/lib/utils';
 
 interface BlogGridProps {
-  posts: BlogPost[];
+  posts: MdxBlogPost[];
   showLoadMore?: boolean;
   maxPosts?: number;
   totalPosts?: number;
@@ -29,7 +29,7 @@ const BlogGrid: React.FC<BlogGridProps> = ({
   maxPosts,
   initialPage = 1,
 }) => {
-  const [allPosts, setAllPosts] = useState<BlogPost[]>(posts);
+  const [allPosts, setAllPosts] = useState<MdxBlogPost[]>(posts);
   const [currentPage, setCurrentPage] = useState(initialPage);
   const [visiblePosts, setVisiblePosts] = useState(maxPosts || 12);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
@@ -64,16 +64,15 @@ const BlogGrid: React.FC<BlogGridProps> = ({
         post =>
           post.title.toLowerCase().includes(query) ||
           post.excerpt.toLowerCase().includes(query) ||
-          (post.tags &&
-            post.tags.some(tag => tag.tag.name.toLowerCase().includes(query)))
+          post.tags.some(tag => tag.toLowerCase().includes(query))
       );
     }
 
     // Sort posts
     if (sortOrder) {
       filtered = [...filtered].sort((a, b) => {
-        const dateA = new Date(a.createdAt).getTime();
-        const dateB = new Date(b.createdAt).getTime();
+        const dateA = new Date(a.publishedAt).getTime();
+        const dateB = new Date(b.publishedAt).getTime();
         return sortOrder === 'Latest' ? dateB - dateA : dateA - dateB;
       });
     }
@@ -145,11 +144,8 @@ const BlogGrid: React.FC<BlogGridProps> = ({
   };
 
   const handleCardClick = useCallback((slug: string) => {
+    void slug;
     setIsNavigating(true);
-    // The navigation will be handled by Next.js Link, but we show loading state
-    // The loading state will be cleared when the page actually navigates
-    // eslint-disable-next-line no-console
-    console.log(`Navigating to blog post: ${slug}`);
     setTimeout(() => {
       setIsNavigating(false);
     }, 2000); // Fallback timeout
@@ -311,7 +307,7 @@ const BlogGrid: React.FC<BlogGridProps> = ({
           {displayPosts.length > 0 ? (
             <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'>
               {displayPosts.map(post => (
-                <div key={post.id} className='w-full'>
+                <div key={post.slug} className='w-full'>
                   <BlogCard post={post} onCardClick={handleCardClick} />
                 </div>
               ))}

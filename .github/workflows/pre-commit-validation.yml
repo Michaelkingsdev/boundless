@@ -55,7 +55,11 @@ jobs:
           invalid_commits=""
 
           while IFS= read -r message; do
-            if [ -n "$message" ] && ! echo "$message" | grep -qE "$commit_regex"; then
+            # Skip empty lines and git-generated merge commits
+            if [ -z "$message" ] || echo "$message" | grep -qE "^Merge (branch|pull request|remote-tracking branch|[0-9a-f]{7,40}) "; then
+              continue
+            fi
+            if ! echo "$message" | grep -qE "$commit_regex"; then
               invalid_commits="$invalid_commits\n$message"
             fi
           done <<< "$commits"
@@ -85,7 +89,7 @@ jobs:
           console_log_found=false
 
           for file in $changed_files; do
-            if [[ "$file" =~ \.(ts|tsx|js|jsx)$ ]]; then
+            if [[ "$file" =~ \.(ts|tsx|js|jsx)$ ]] && [ -f "$file" ]; then
               if grep -q "console\.log" "$file"; then
                 echo "❌ Found console.log in $file"
                 console_log_found=true
@@ -115,7 +119,7 @@ jobs:
           todo_found=false
 
           for file in $changed_files; do
-            if [[ "$file" =~ \.(ts|tsx|js|jsx)$ ]]; then
+            if [[ "$file" =~ \.(ts|tsx|js|jsx)$ ]] && [ -f "$file" ]; then
               if grep -q "TODO\|FIXME" "$file"; then
                 echo "⚠️  Found TODO/FIXME in $file"
                 todo_found=true

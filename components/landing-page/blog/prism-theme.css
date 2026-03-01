@@ -1,0 +1,81 @@
+/* IDE-style syntax highlighting for MDX code blocks (rehype-prism-plus / refractor) */
+.prose pre[class*='language-'] {
+  background: var(--color-background-card);
+  border: 1px solid var(--color-gray-900);
+}
+
+.prose pre[class*='language-'] code {
+  background: transparent;
+  padding: 0;
+  font-size: 0.875rem;
+  line-height: 1.625;
+}
+
+/* Token colors — IDE-like dark theme using design system */
+.prose .token.comment,
+.prose .token.prolog,
+.prose .token.doctype,
+.prose .token.cdata {
+  color: var(--color-gray-600);
+}
+
+.prose .token.punctuation {
+  color: var(--color-gray-500);
+}
+
+.prose .token.property,
+.prose .token.tag,
+.prose .token.boolean,
+.prose .token.number,
+.prose .token.constant,
+.prose .token.symbol {
+  color: #d4a574;
+}
+
+.prose .token.selector,
+.prose .token.attr-name,
+.prose .token.string,
+.prose .token.char,
+.prose .token.builtin {
+  color: #7ec699;
+}
+
+.prose .token.operator,
+.prose .token.entity,
+.prose .token.url,
+.prose .token.variable {
+  color: var(--color-gray-300);
+}
+
+.prose .token.atrule,
+.prose .token.keyword {
+  color: var(--color-primary);
+}
+
+.prose .token.attr-value,
+.prose .token.regex,
+.prose .token.important {
+  color: #7ec699;
+}
+
+.prose .token.function,
+.prose .token.class-name {
+  color: #ddb6f2;
+}
+
+.prose .token.deleted {
+  color: #e26d6d;
+}
+
+.prose .token.inserted {
+  color: #7ec699;
+}
+
+/* Line numbers (if enabled via rehype-prism-plus meta) */
+.prose .code-line.line-number::before {
+  color: var(--color-gray-700);
+}
+
+.prose .code-highlight .highlight-line {
+  background: color-mix(in srgb, var(--color-section) 60%, transparent);
+}
