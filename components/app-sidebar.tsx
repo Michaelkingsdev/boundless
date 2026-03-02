@@ -28,7 +28,10 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 
-const getNavigationData = (counts?: { participating?: number }) => ({
+const getNavigationData = (counts?: {
+  participating?: number;
+  submissions?: number;
+}) => ({
   main: [
     {
       title: 'Overview',
@@ -73,6 +76,10 @@ const getNavigationData = (counts?: { participating?: number }) => ({
       title: 'Submissions',
       url: '/me/hackathons/submissions',
       icon: IconUsers,
+      badge:
+        counts?.submissions && counts.submissions > 0
+          ? counts.submissions.toString()
+          : undefined,
     },
   ],
   crowdfunding: [
@@ -114,7 +121,7 @@ export function AppSidebar({
   ...props
 }: {
   user: UserData;
-  counts?: { participating?: number };
+  counts?: { participating?: number; submissions?: number };
 } & React.ComponentProps<typeof Sidebar>) {
   const navigationData = React.useMemo(
     () => getNavigationData(counts),

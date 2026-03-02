@@ -197,7 +197,7 @@ const PublicEarningsTab = ({
 
       {(earnings.activities?.length ?? 0) > 0 && (
         <div className='space-y-4 border-t border-zinc-800 pt-6'>
-          <h3 className='text-xs font-semibold uppercase tracking-wider text-zinc-500'>
+          <h3 className='text-xs font-semibold tracking-wider text-zinc-500 uppercase'>
             Verified Activity
           </h3>
           <div className='space-y-3'>
