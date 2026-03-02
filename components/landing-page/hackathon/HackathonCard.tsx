@@ -2,7 +2,7 @@
 import { useRouter } from 'nextjs-toploader/app';
 import Image from 'next/image';
 import { MapPinIcon } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Hackathon } from '@/lib/api/hackathons';
 import { cn } from '@/lib/utils';
 
@@ -205,8 +205,9 @@ export const HackathonCard = ({
     }
   };
 
-  // Determine top badge status using raw dates
-  const getTopBadgeStatus = () => {
+  // Determine top badge status using raw dates — memoised so it can safely
+  // appear in the useEffect dependency array without triggering infinite loops.
+  const getTopBadgeStatus = useCallback(() => {
     if (status === 'ARCHIVED') {
       return 'Archived';
     }
@@ -229,7 +230,7 @@ export const HackathonCard = ({
 
     // Otherwise it's upcoming
     return 'Upcoming';
-  };
+  }, [status, startDate, submissionDeadline]);
 
   const getTopBadgeColor = () => {
     const badgeStatus = getTopBadgeStatus();

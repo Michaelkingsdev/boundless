@@ -39,28 +39,31 @@ export default function ParticipatingPage() {
     const hackathonsAsParticipant = profile.hackathonsAsParticipant || [];
     const submissions = profile.user?.hackathonSubmissionsAsParticipant || [];
 
-    // Map hackathons from joined list
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const typedJoinedHackathons: UnifiedItem[] = joinedHackathons.map(
-      (h: any) => {
+    const typedJoinedHackathons: UnifiedItem[] = joinedHackathons
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((h: any) => {
+        const data = h?.hackathon || h;
+        return data && data.id;
+      })
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((h: any) => {
         const hackathonData = h.hackathon || h;
         return {
           ...hackathonData,
           type: 'hackathon' as const,
         };
-      }
-    );
-
-    // Map hackathons from participating list (preferred source based on logs)
-    const typedParticipatingHackathons: UnifiedItem[] =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      hackathonsAsParticipant.map((p: any) => {
-        const hackathonData = p.hackathon;
-        return {
-          ...hackathonData,
-          type: 'hackathon' as const,
-        };
       });
+
+    // Map hackathons from participating list — filter first to ensure p.hackathon is defined
+    const typedParticipatingHackathons: UnifiedItem[] = hackathonsAsParticipant
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .filter((p: any) => p && p.hackathon && p.hackathon.id)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      .map((p: any) => ({
+        ...p.hackathon,
+        type: 'hackathon' as const,
+      }));
 
     // Map hackathons from submissions
     const typedSubmissionHackathons: UnifiedItem[] = submissions
@@ -86,7 +89,6 @@ export default function ParticipatingPage() {
       return true;
     });
 
-    // Sort logic: active/ongoing first, then upcoming, then completed
     const sorted = deduplicated.sort((a, b) => {
       const getPriority = (h: UnifiedItem) => {
         const now = new Date().getTime();
@@ -107,7 +109,7 @@ export default function ParticipatingPage() {
   }, [user]);
 
   const filteredList = useMemo(() => {
-    if (activeTab === 'projects') return []; // Keep projects tab empty as requested
+    if (activeTab === 'projects') return [];
 
     let result = unifiedList;
     if (activeTab === 'hackathons') {
