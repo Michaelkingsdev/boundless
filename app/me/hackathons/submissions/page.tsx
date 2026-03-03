@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSession } from 'next-auth/react';
+import { useAuthStatus } from '@/hooks/use-auth';
 import BoundlessSheet from '@/components/sheet/boundless-sheet';
 import EmptyState from '@/components/EmptyState';
 import { useRouter } from 'next/navigation';
@@ -25,7 +25,7 @@ import {
 
 export default function SubmissionsPage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, isLoading } = useAuthStatus();
 
   const [sortField, setSortField] = useState<SortField>('submittedAt');
   const [sortDir, setSortDir] = useState<SortDir>('desc');
@@ -33,10 +33,9 @@ export default function SubmissionsPage() {
     useState<SubmissionRow | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
 
-  // Pull submissions data from session — no extra API calls
+  // Pull submissions data from auth state — no extra API calls
   const rawSubmissions: SubmissionRow[] = useMemo(() => {
-    const sessionUser = session?.user as any;
-    const profile = sessionUser?.profile;
+    const profile = (user as any)?.profile;
     if (!profile) return [];
 
     // Primary path: profile.user.hackathonSubmissionsAsParticipant
@@ -72,7 +71,7 @@ export default function SubmissionsPage() {
       hackathon: s.hackathon,
       disqualificationReason: s.disqualificationReason,
     }));
-  }, [session?.user]);
+  }, [user]);
 
   const sorted = useMemo(() => {
     return [...rawSubmissions].sort((a, b) => {
@@ -132,7 +131,7 @@ export default function SubmissionsPage() {
   const thClass =
     'h-12 px-2 text-left align-middle font-medium text-zinc-400 [&:has([role=checkbox])]:pr-0';
 
-  if (status === 'loading') {
+  if (isLoading) {
     return (
       <div className='flex h-[400px] items-center justify-center'>
         <div className='border-primary h-8 w-8 animate-spin rounded-full border-2 border-t-transparent' />
