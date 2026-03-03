@@ -10,7 +10,7 @@ import React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { timelineSchema, TimelineFormData } from './schemas/timelineSchema';
 import { BoundlessButton } from '@/components/buttons';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ChevronDownIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -29,6 +29,7 @@ import {
   TIMELINE_FIELD_TOOLTIPS,
   TIMEZONES,
 } from './components/timeline/timelineConstants';
+import { format } from 'date-fns';
 
 interface TimelineTabProps {
   onContinue?: () => void;
@@ -47,10 +48,8 @@ export default function TimelineTab({
     defaultValues: {
       startDate: initialData?.startDate || undefined,
       submissionDeadline: initialData?.submissionDeadline || undefined,
-      judgingStart: initialData?.judgingStart || undefined,
-      endDate: initialData?.endDate || undefined,
-      judgingEnd: initialData?.judgingEnd || undefined,
-      winnersAnnouncedAt: initialData?.winnersAnnouncedAt || undefined,
+      registrationDeadline: initialData?.registrationDeadline || undefined,
+      judgingDeadline: initialData?.judgingDeadline || undefined,
       timezone: initialData?.timezone || 'UTC',
       phases: initialData?.phases || [],
     },
@@ -61,14 +60,13 @@ export default function TimelineTab({
     name: 'phases',
   });
 
-  const hasJudgingEnd = !!form.watch('judgingEnd');
-  const hasWinnersAnnouncedAt = !!form.watch('winnersAnnouncedAt');
+  const hasRegistrationDeadline = !!form.watch('registrationDeadline');
+  const hasJudgingDeadline = !!form.watch('judgingDeadline');
 
   const onSubmit = async (data: TimelineFormData) => {
     try {
       if (onSave) {
         await onSave(data);
-        // Navigation is handled automatically in saveTimelineStep
         toast.success('Timeline saved successfully!');
       }
     } catch {
@@ -86,7 +84,7 @@ export default function TimelineTab({
             render={({ field }) => (
               <FormItem className='gap-3'>
                 <FieldLabel
-                  label='Start Date'
+                  label='Start Time'
                   required
                   tooltip={TIMELINE_FIELD_TOOLTIPS.startDate}
                 />
@@ -112,44 +110,6 @@ export default function TimelineTab({
                 <DateTimeInput
                   field={field}
                   placeholder='Final project submission deadline.'
-                />
-                <FormMessage className='text-error-400 text-xs' />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name='judgingStart'
-            render={({ field }) => (
-              <FormItem className='gap-3'>
-                <FieldLabel
-                  label='Judging Start'
-                  required
-                  tooltip={TIMELINE_FIELD_TOOLTIPS.judgingStart}
-                />
-                <DateTimeInput
-                  field={field}
-                  placeholder='When judging begins.'
-                />
-                <FormMessage className='text-error-400 text-xs' />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name='endDate'
-            render={({ field }) => (
-              <FormItem className='gap-3'>
-                <FieldLabel
-                  label='End Date'
-                  required
-                  tooltip={TIMELINE_FIELD_TOOLTIPS.endDate}
-                />
-                <DateTimeInput
-                  field={field}
-                  placeholder='When the hackathon ends.'
                 />
                 <FormMessage className='text-error-400 text-xs' />
               </FormItem>
@@ -189,31 +149,30 @@ export default function TimelineTab({
           />
         </div>
 
+        {/* Pre-Registration End Time Section */}
         <div className='space-y-6'>
           <div className='bg-background-card flex items-center justify-between rounded-[12px] border border-gray-900 p-4'>
             <div className='space-y-1'>
               <FieldLabel
-                label='Judging End'
-                tooltip={TIMELINE_FIELD_TOOLTIPS.judgingEnd}
+                label='Pre-registration End Time'
+                tooltip={TIMELINE_FIELD_TOOLTIPS.registrationDeadline}
                 useFormLabel={false}
               />
               <p className='text-xs text-gray-400'>
-                Add an end date for judging.
+                Set a specific date when pre-registration closes (optional).
               </p>
             </div>
             <Switch
-              checked={hasJudgingEnd}
+              checked={hasRegistrationDeadline}
               onCheckedChange={checked => {
                 if (checked) {
-                  const fallbackDate =
-                    form.getValues('judgingStart') ||
-                    form.getValues('submissionDeadline') ||
-                    new Date();
-                  form.setValue('judgingEnd', fallbackDate, {
+                  const fallback =
+                    form.getValues('submissionDeadline') || new Date();
+                  form.setValue('registrationDeadline', fallback, {
                     shouldValidate: true,
                   });
                 } else {
-                  form.setValue('judgingEnd', undefined, {
+                  form.setValue('registrationDeadline', undefined, {
                     shouldValidate: true,
                   });
                 }
@@ -221,16 +180,19 @@ export default function TimelineTab({
             />
           </div>
 
-          {hasJudgingEnd && (
+          {hasRegistrationDeadline && (
             <FormField
               control={form.control}
-              name='judgingEnd'
+              name='registrationDeadline'
               render={({ field }) => (
                 <FormItem className='gap-3'>
-                  <FieldLabel label='Judging End' />
+                  <FieldLabel label='Pre-registration End Time' />
+                  <p className='text-xs text-gray-400'>
+                    Must be on or before the submission deadline.
+                  </p>
                   <DateTimeInput
                     field={field}
-                    placeholder='When judging ends.'
+                    placeholder='Pick a pre-registration end time.'
                   />
                   <FormMessage className='text-error-400 text-xs' />
                 </FormItem>
@@ -239,31 +201,31 @@ export default function TimelineTab({
           )}
         </div>
 
+        {/* Judging Deadline Section */}
         <div className='space-y-6'>
           <div className='bg-background-card flex items-center justify-between rounded-[12px] border border-gray-900 p-4'>
             <div className='space-y-1'>
               <FieldLabel
-                label='Winner Announcement'
-                tooltip={TIMELINE_FIELD_TOOLTIPS.winnersAnnouncedAt}
+                label='Judging Deadline'
+                tooltip={TIMELINE_FIELD_TOOLTIPS.judgingDeadline}
                 useFormLabel={false}
               />
               <p className='text-xs text-gray-400'>
-                Set a public results date.
+                Set a deadline for when all judging must be completed
+                (optional).
               </p>
             </div>
             <Switch
-              checked={hasWinnersAnnouncedAt}
+              checked={hasJudgingDeadline}
               onCheckedChange={checked => {
                 if (checked) {
-                  const fallbackDate =
-                    form.getValues('judgingEnd') ||
-                    form.getValues('judgingStart') ||
-                    new Date();
-                  form.setValue('winnersAnnouncedAt', fallbackDate, {
+                  const fallback =
+                    form.getValues('submissionDeadline') || new Date();
+                  form.setValue('judgingDeadline', fallback, {
                     shouldValidate: true,
                   });
                 } else {
-                  form.setValue('winnersAnnouncedAt', undefined, {
+                  form.setValue('judgingDeadline', undefined, {
                     shouldValidate: true,
                   });
                 }
@@ -271,16 +233,19 @@ export default function TimelineTab({
             />
           </div>
 
-          {hasWinnersAnnouncedAt && (
+          {hasJudgingDeadline && (
             <FormField
               control={form.control}
-              name='winnersAnnouncedAt'
+              name='judgingDeadline'
               render={({ field }) => (
                 <FormItem className='gap-3'>
-                  <FieldLabel label='Winner Announcement' />
+                  <FieldLabel label='Judging Deadline' />
+                  <p className='text-xs text-gray-400'>
+                    Must be on or after the submission deadline.
+                  </p>
                   <DateTimeInput
                     field={field}
-                    placeholder='Public results date.'
+                    placeholder='When all judging must be completed.'
                   />
                   <FormMessage className='text-error-400 text-xs' />
                 </FormItem>

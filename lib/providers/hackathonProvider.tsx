@@ -246,7 +246,7 @@ export function HackathonDataProvider({
       const submissions = await getExploreSubmissions(hackathonId);
       const mappedSubmissions: SubmissionCardProps[] = submissions.map(sub => ({
         _id: sub.id,
-        title: sub.projectName,
+        projectName: sub.projectName,
         description: sub.description,
         submitterName:
           sub.teamName || sub.teamMembers?.[0]?.name || 'Unknown Participant',
@@ -283,7 +283,8 @@ export function HackathonDataProvider({
   // --------------------------------
 
   const ongoingHackathons = React.useMemo(
-    () => hackathons.filter(h => h.status === 'ONGOING'),
+    () =>
+      hackathons.filter(h => h.status === 'ACTIVE' || h.status === 'JUDGING'),
     [hackathons]
   );
 
@@ -293,7 +294,13 @@ export function HackathonDataProvider({
   );
 
   const pastHackathons = React.useMemo(
-    () => hackathons.filter(h => h.status === 'ENDED'),
+    () =>
+      hackathons.filter(
+        h =>
+          h.status === 'COMPLETED' ||
+          h.status === 'ARCHIVED' ||
+          h.status === 'CANCELLED'
+      ),
     [hackathons]
   );
 
@@ -367,10 +374,16 @@ export function HackathonDataProvider({
             currentHackathon.submissionDeadline
           ).toLocaleDateString(),
         },
-        {
-          event: 'Winners Announced',
-          date: new Date(currentHackathon.endDate).toLocaleDateString(),
-        },
+        ...(currentHackathon.judgingDeadline
+          ? [
+              {
+                event: 'Judging Deadline',
+                date: new Date(
+                  currentHackathon.judgingDeadline
+                ).toLocaleDateString(),
+              },
+            ]
+          : []),
       ]
     : [];
 
@@ -379,10 +392,10 @@ export function HackathonDataProvider({
         {
           title: 'Grand Prize',
           rank: '1 winner',
-          prize: `${currentHackathon.prizeTiers.reduce((acc, prize) => acc + Number(prize.amount || 0), 0)} in prizes`,
+          prize: `${currentHackathon.prizeTiers.reduce((acc, prize) => acc + Number(prize.prizeAmount || 0), 0)} in prizes`,
           icon: '⭐',
           details: [
-            `Prize: ${currentHackathon.prizeTiers.reduce((acc, prize) => acc + Number(prize.amount || 0), 0)}`,
+            `Prize: ${currentHackathon.prizeTiers.reduce((acc, prize) => acc + Number(prize.prizeAmount || 0), 0)}`,
             'Premium Swag Box',
           ],
         },

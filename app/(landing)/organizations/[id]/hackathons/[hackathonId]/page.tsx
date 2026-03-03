@@ -158,31 +158,7 @@ export default function HackathonPage() {
                     e => e.phase === 'Winner Announcement'
                   );
 
-                  // Manually append Winner Announcement if missing and date exists
                   const fullTimeline = [...timelineEvents];
-                  if (!hasWinnerAnnouncement && currentHackathon?.endDate) {
-                    const winnerDate = new Date(currentHackathon.endDate);
-                    const now = new Date();
-                    // Simple status logic for single date event
-                    // If date is passed, completed. If today (roughly), ongoing?
-                    // Or just use 'upcoming' if future, 'completed' if past.
-                    // Ideally we'd match the phase logic, but for a single date event:
-                    let status: 'completed' | 'ongoing' | 'upcoming' =
-                      'upcoming';
-                    if (now > winnerDate) {
-                      status = 'completed';
-                    }
-                    // For "Winner Announcement", it might be "ongoing" on the day of?
-                    // keeping simple for now.
-
-                    fullTimeline.push({
-                      phase: 'Winner Announcement',
-                      description:
-                        'Final results published and prizes distributed to winners.',
-                      date: currentHackathon.endDate,
-                      status: status,
-                    });
-                  }
 
                   return fullTimeline.map((phase, index) => {
                     const isLast = index === fullTimeline.length - 1;

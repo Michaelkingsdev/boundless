@@ -92,7 +92,7 @@ export function useSubmissions() {
     if (searchTerm) {
       filtered = filtered.filter(
         sub =>
-          sub.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          sub.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           sub.submitterName.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }

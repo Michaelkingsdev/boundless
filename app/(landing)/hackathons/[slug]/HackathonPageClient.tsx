@@ -313,12 +313,11 @@ export default function HackathonPageClient() {
     deadline: currentHackathon.submissionDeadline,
     startDate: currentHackathon.startDate,
     totalPrizePool: currentHackathon.prizeTiers
-      .reduce((acc, prize) => acc + Number(prize.amount || 0), 0)
+      .reduce((acc, prize) => acc + Number(prize.prizeAmount || 0), 0)
       .toString(),
     isRegistered,
     hasSubmitted,
     isTeamFormationEnabled,
-    registrationDeadlinePolicy: currentHackathon.registrationDeadlinePolicy,
     registrationDeadline: currentHackathon.registrationDeadline,
     participantType: currentHackathon.participantType,
     onJoinClick: handleJoinClick,
@@ -359,10 +358,13 @@ export default function HackathonPageClient() {
                   currency: tier.currency,
                   passMark: tier.passMark,
                   description: tier.description,
-                  prizeAmount: tier.amount,
+                  prizeAmount: tier.prizeAmount,
                 }))}
                 totalPrizePool={currentHackathon.prizeTiers
-                  .reduce((acc, prize) => acc + Number(prize.amount || 0), 0)
+                  .reduce(
+                    (acc, prize) => acc + Number(prize.prizeAmount || 0),
+                    0
+                  )
                   .toString()}
                 hackathonSlugOrId={hackathonId}
                 venue={{

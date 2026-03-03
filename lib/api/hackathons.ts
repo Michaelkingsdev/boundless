@@ -2,11 +2,6 @@ import api from './api';
 import { ApiResponse, ErrorResponse, PaginatedResponse } from './types';
 // Discussion type removed - using generic Comment type from @/types/comment
 
-export type RegistrationDeadlinePolicy =
-  | 'custom'
-  | 'before_start'
-  | 'before_submission_deadline';
-
 // Enums matching backend models
 export enum HackathonCategory {
   DEFI = 'DeFi',
@@ -75,14 +70,9 @@ export interface HackathonPhase {
 export interface HackathonTimeline {
   startDate: string; // ISO 8601 date
   submissionDeadline: string; // ISO 8601 date
-  judgingStart: string; // ISO 8601 date
-  endDate: string; // ISO 8601 date
-  judgingEnd?: string; // ISO 8601 date
-  winnersAnnouncedAt?: string; // ISO 8601 date
-  // Legacy fields for backward compatibility
-  judgingDate?: string; // ISO 8601 date
-  winnerAnnouncementDate?: string; // ISO 8601 date
   timezone: string;
+  registrationDeadline?: string; // ISO 8601 date — optional pre-registration end time
+  judgingDeadline?: string; // ISO 8601 date — maps to backend judgingEnd
   phases?: HackathonPhase[];
 }
 
@@ -111,8 +101,7 @@ export interface HackathonParticipation {
   teamMin?: number;
   teamMax?: number;
   about?: string;
-  registrationDeadlinePolicy?: RegistrationDeadlinePolicy;
-  registrationDeadline?: string;
+  maxParticipants?: number; // null = unlimited
   submissionRequirements?: SubmissionRequirements;
   tabVisibility?: TabVisibility;
 }
@@ -329,13 +318,19 @@ export type Hackathon = {
 
   status:
     | 'DRAFT'
-    | 'PUBLISHED'
-    | 'ARCHIVED'
-    | 'ONGOING'
-    | 'COMPLETED'
-    | 'CANCELLED'
     | 'UPCOMING'
-    | 'ENDED';
+    | 'ACTIVE'
+    | 'JUDGING'
+    | 'COMPLETED'
+    | 'ARCHIVED'
+    | 'CANCELLED';
+  currentPhase?:
+    | 'upcoming'
+    | 'active'
+    | 'judging'
+    | 'awaiting_results'
+    | 'completed';
+  maxParticipants?: number | null;
   isActive: boolean;
   isParticipant: boolean;
 
@@ -348,22 +343,13 @@ export type Hackathon = {
   timezone: string;
 
   startDate: string; // ISO date
-  endDate: string; // ISO date
   submissionDeadline: string; // ISO date
   registrationDeadline: string; // ISO date
-  judgingStart: string; // ISO date
-  judgingEnd?: string; // ISO date
-  winnersAnnouncedAt?: string; // ISO date
-  customRegistrationDeadline: string | null;
+  judgingDeadline?: string; // ISO date
 
   registrationOpen: boolean;
-  registrationDeadlinePolicy:
-    | 'BEFORE_START'
-    | 'BEFORE_SUBMISSION_DEADLINE'
-    | 'CUSTOM';
 
   daysUntilStart: number;
-  daysUntilEnd: number;
 
   participantType: 'INDIVIDUAL' | 'TEAM' | 'TEAM_OR_INDIVIDUAL';
   teamMin: number;
@@ -394,7 +380,7 @@ export type Hackathon = {
   prizeTiers: Array<{
     id?: string;
     name?: string;
-    amount?: string;
+    prizeAmount?: string;
     currency?: string;
     description?: string;
     passMark?: number;
@@ -1705,7 +1691,14 @@ export const getHackathonSubmissions = async (
 };
 
 /**
- * Explore hackathon submissions (Public showcase)
+ * Explore hackathon submissions (Public showcase, for normal users)
+ *
+ * Retrieves all public submissions for a hackathon for public/user viewing.
+ *
+ * @param hackathonId - Hackathon ID or slug
+ * @param page - Page number (optional)
+ * @param limit - Items per page (optional)
+ * @returns Array of ExploreSubmissionsResponse
  */
 export const getExploreSubmissions = async (
   hackathonId: string,

@@ -186,7 +186,6 @@ function HackathonCard({
     seconds: 0,
     total: 0,
   });
-
   const handleClick = () => {
     const slugPath = slug || id || '';
     router.push(`/hackathons/${slugPath}`);
@@ -399,7 +398,7 @@ function HackathonCard({
           className='object-cover transition-transform duration-300 group-hover:scale-105'
           unoptimized
         />
-        <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/50 to-transparent' />
+        <div className='absolute inset-0 bg-linear-to-t from-black/90 via-black/50 to-transparent' />
 
         <div className='absolute top-3 right-3 left-3 flex items-center justify-between'>
           <CategoriesDisplay categoriesList={categories} />
@@ -437,12 +436,12 @@ function HackathonCard({
                 $
                 {formatFullNumber(
                   prizeTiers.reduce((acc, tier) => {
-                    const amount = Number(tier.amount);
+                    const amount = Number(tier.prizeAmount);
                     return acc + (Number.isFinite(amount) ? amount : 0);
                   }, 0)
                 )}
               </span>
-              <span className='text-xs'>{prizeTiers[0]?.name || 'Prize'}</span>
+              <span className='text-xs'>Prize Pool</span>
             </div>
           )}
           {/* {participantsCount && (
