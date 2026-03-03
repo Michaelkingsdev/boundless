@@ -186,7 +186,9 @@ export default function SubmissionsPage() {
               {
                 label: 'Under Review',
                 value: rawSubmissions.filter(s => {
-                  const st = (s.status || '').toLowerCase();
+                  const st = (s.status || '')
+                    .toLowerCase()
+                    .replace(/[\s\-]+/g, '_');
                   return st === 'under_review' || st === 'submitted';
                 }).length,
                 color: 'text-amber-400',
