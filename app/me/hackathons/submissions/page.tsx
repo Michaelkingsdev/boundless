@@ -188,7 +188,7 @@ export default function SubmissionsPage() {
                 value: rawSubmissions.filter(s => {
                   const st = (s.status || '')
                     .toLowerCase()
-                    .replace(/[\s\-]+/g, '_');
+                    .replace(/[\s\-_]+/g, '_');
                   return st === 'under_review' || st === 'submitted';
                 }).length,
                 color: 'text-amber-400',
