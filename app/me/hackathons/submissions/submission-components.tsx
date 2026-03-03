@@ -17,6 +17,22 @@ import { Separator } from '@/components/ui/separator';
 import { TableCell, TableRow as ShadcnTableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import { format } from 'date-fns';
+import { useState } from 'react';
+
+// ─────────────────────────── Url Sanitization ───────────────────────────
+
+export function getSafeUrl(urlString?: string): string | undefined {
+  if (!urlString) return undefined;
+  try {
+    const parsed = new URL(urlString);
+    if (['http:', 'https:', 'mailto:'].includes(parsed.protocol)) {
+      return parsed.href;
+    }
+    return undefined;
+  } catch {
+    return undefined;
+  }
+}
 
 export type SortField =
   | 'projectName'
@@ -301,13 +317,13 @@ export function SubmissionsSheetContent({
       )}
 
       {/* Video link */}
-      {submission.videoUrl && (
+      {submission.videoUrl && getSafeUrl(submission.videoUrl) && (
         <div className='space-y-2'>
           <h3 className='text-sm font-semibold tracking-wider text-zinc-500 uppercase'>
             Demo Video
           </h3>
           <a
-            href={submission.videoUrl}
+            href={getSafeUrl(submission.videoUrl)}
             target='_blank'
             rel='noopener noreferrer'
             className='inline-flex items-center gap-2 rounded-lg border border-[#a7f950]/30 bg-[#a7f950]/5 px-3 py-2 text-sm text-[#a7f950] transition-colors hover:bg-[#a7f950]/10'
@@ -325,18 +341,22 @@ export function SubmissionsSheetContent({
             Project Links
           </h3>
           <div className='flex flex-wrap gap-2'>
-            {submission.links.map((link, i) => (
-              <a
-                key={i}
-                href={link.url}
-                target='_blank'
-                rel='noopener noreferrer'
-                className='inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
-              >
-                <ExternalLink className='h-3.5 w-3.5 shrink-0' />
-                {link.type || link.url}
-              </a>
-            ))}
+            {submission.links.map((link, i) => {
+              const safeUrl = getSafeUrl(link.url);
+              if (!safeUrl) return null;
+              return (
+                <a
+                  key={i}
+                  href={safeUrl}
+                  target='_blank'
+                  rel='noopener noreferrer'
+                  className='inline-flex items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 py-1.5 text-sm text-zinc-300 transition-colors hover:border-white/20 hover:text-white'
+                >
+                  <ExternalLink className='h-3.5 w-3.5 shrink-0' />
+                  {link.type || link.url}
+                </a>
+              );
+            })}
           </div>
         </div>
       )}
@@ -370,6 +390,7 @@ export function TableRow({
     submission.hackathon?.title || submission.hackathon?.name || '—';
 
   const viewUrl = `/projects/${submission.id}?type=submission`;
+  const [isHoverOrFocus, setIsHoverOrFocus] = useState(false);
 
   const formatDate = (dateString?: string) => {
     if (!dateString) return '—';
@@ -411,6 +432,8 @@ export function TableRow({
       onClick={handleLeftClick}
       onAuxClick={handleAuxClick}
       className='group cursor-pointer border-b border-white/5 transition-colors duration-150 hover:bg-white/[0.04]'
+      onMouseEnter={() => setIsHoverOrFocus(true)}
+      onMouseLeave={() => setIsHoverOrFocus(false)}
       role='button'
       tabIndex={0}
       onKeyDown={handleKeyDown}
@@ -443,8 +466,12 @@ export function TableRow({
               target='_blank'
               rel='noopener noreferrer'
               onClick={e => e.stopPropagation()}
+              onFocus={() => setIsHoverOrFocus(true)}
+              onBlur={() => setIsHoverOrFocus(false)}
+              tabIndex={isHoverOrFocus ? 0 : -1}
+              aria-hidden={!isHoverOrFocus}
               title='Open submission in new tab'
-              className='text-zinc-500 opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-zinc-200'
+              className='rounded-sm text-zinc-500 opacity-0 transition-opacity duration-150 group-hover:opacity-100 hover:text-zinc-200 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-[#a7f950] focus-visible:ring-offset-1 focus-visible:ring-offset-zinc-900 focus-visible:outline-none'
               aria-label={`Open ${submission.projectName} in new tab`}
             >
               <ExternalLink className='h-3.5 w-3.5' />
