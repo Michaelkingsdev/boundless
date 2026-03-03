@@ -14,6 +14,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
+import { TableCell, TableRow as ShadcnTableRow } from '@/components/ui/table';
 import Image from 'next/image';
 import { format } from 'date-fns';
 
@@ -379,13 +380,27 @@ export function TableRow({
     }
   };
 
-  const handleClick = (e: React.MouseEvent) => {
-    // Ctrl/Cmd+click or middle-click → open in new tab
-    if (e.ctrlKey || e.metaKey || e.button === 1) {
-      window.open(viewUrl, '_blank', 'noopener,noreferrer');
-      return;
-    }
+  const handleLeftClick = (e: React.MouseEvent) => {
+    // Left click only
+    if (e.button !== 0) return;
     onClick();
+  };
+
+  const handleAuxClick = (e: React.MouseEvent) => {
+    // Middle click only -> open in new tab
+    if (e.button === 1) {
+      e.stopPropagation();
+      window.open(viewUrl, '_blank', 'noopener,noreferrer');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onClick();
+    } else if (e.key === ' ') {
+      e.preventDefault(); // prevent page scrolling
+      onClick();
+    }
   };
 
   return (
@@ -393,16 +408,16 @@ export function TableRow({
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.25 }}
-      onClick={handleClick}
-      onAuxClick={handleClick}
+      onClick={handleLeftClick}
+      onAuxClick={handleAuxClick}
       className='group cursor-pointer border-b border-white/5 transition-colors duration-150 hover:bg-white/[0.04]'
       role='button'
       tabIndex={0}
-      onKeyDown={e => e.key === 'Enter' && onClick()}
+      onKeyDown={handleKeyDown}
       aria-label={`View details for ${submission.projectName}`}
     >
       {/* Project */}
-      <td className='py-4 pr-3 pl-4'>
+      <TableCell className='py-4 pr-3 pl-4'>
         <div className='flex items-center gap-3'>
           {submission.logo ? (
             <div className='relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-white/10 bg-zinc-900'>
@@ -436,29 +451,29 @@ export function TableRow({
             </a>
           </div>
         </div>
-      </td>
+      </TableCell>
 
       {/* Hackathon */}
-      <td className='hidden px-3 py-4 sm:table-cell'>
+      <TableCell className='hidden px-3 py-4 sm:table-cell'>
         <span className='max-w-[180px] truncate text-sm text-zinc-400'>
           {hackathonName}
         </span>
-      </td>
+      </TableCell>
 
       {/* Status */}
-      <td className='px-3 py-4'>
+      <TableCell className='px-3 py-4'>
         <StatusBadge status={submission.status} />
-      </td>
+      </TableCell>
 
       {/* Date */}
-      <td className='hidden px-3 py-4 lg:table-cell'>
+      <TableCell className='hidden px-3 py-4 lg:table-cell'>
         <span className='text-sm text-zinc-400'>
           {formatDate(submission.submittedAt)}
         </span>
-      </td>
+      </TableCell>
 
       {/* Rank */}
-      <td className='hidden px-3 py-4 xl:table-cell'>
+      <TableCell className='hidden px-3 py-4 xl:table-cell'>
         {submission.rank != null ? (
           <span className='inline-flex items-center gap-1 text-sm font-medium text-amber-400'>
             <Trophy className='h-3.5 w-3.5' />#{submission.rank}
@@ -466,12 +481,12 @@ export function TableRow({
         ) : (
           <span className='text-sm text-zinc-600'>—</span>
         )}
-      </td>
+      </TableCell>
 
       {/* Chevron */}
-      <td className='py-4 pr-4 pl-3 text-right'>
+      <TableCell className='py-4 pr-4 pl-3 text-right'>
         <ChevronDown className='ml-auto h-4 w-4 -rotate-90 text-zinc-600 transition-colors group-hover:text-zinc-300' />
-      </td>
+      </TableCell>
     </motion.tr>
   );
 }

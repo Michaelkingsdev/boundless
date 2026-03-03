@@ -8,6 +8,13 @@ import EmptyState from '@/components/EmptyState';
 import { useRouter } from 'next/navigation';
 import { Trophy } from 'lucide-react';
 import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+  TableRow as ShadcnTableRow,
+} from '@/components/ui/table';
+import {
   SortField,
   SortDir,
   SubmissionRow,
@@ -117,8 +124,13 @@ export default function SubmissionsPage() {
     setSheetOpen(true);
   };
 
+  const getAriaSort = (field: SortField) => {
+    if (sortField !== field) return 'none';
+    return sortDir === 'asc' ? 'ascending' : 'descending';
+  };
+
   const thClass =
-    'cursor-pointer select-none whitespace-nowrap py-3 text-xs font-semibold uppercase tracking-wider text-zinc-500 transition-colors hover:text-zinc-300';
+    'h-12 px-2 text-left align-middle font-medium text-zinc-400 [&:has([role=checkbox])]:pr-0';
 
   if (isLoading) {
     return (
@@ -213,68 +225,103 @@ export default function SubmissionsPage() {
             className='overflow-hidden rounded-xl border border-white/5 bg-white/[0.025]'
           >
             <div className='overflow-x-auto'>
-              <table className='w-full min-w-[560px] border-collapse text-left'>
-                <thead>
-                  <tr className='border-b border-white/5'>
-                    <th
+              <Table className='min-w-[560px]'>
+                <TableHeader>
+                  <ShadcnTableRow className='border-white/5 hover:bg-transparent'>
+                    <TableHead
                       className={`${thClass} pr-3 pl-4`}
-                      onClick={() => handleSort('projectName')}
+                      aria-sort={getAriaSort('projectName')}
                     >
-                      Project
-                      <SortIcon
-                        field='projectName'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                      />
-                    </th>
-                    <th
+                      <button
+                        type='button'
+                        onClick={() => handleSort('projectName')}
+                        className='flex w-full items-center gap-1 rounded-sm text-xs font-semibold tracking-wider uppercase hover:text-white focus-visible:ring-2 focus-visible:ring-[#a7f950] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0e0c0c] focus-visible:outline-none'
+                        aria-label='Sort by Project Name'
+                      >
+                        Project
+                        <SortIcon
+                          field='projectName'
+                          sortField={sortField}
+                          sortDir={sortDir}
+                        />
+                      </button>
+                    </TableHead>
+                    <TableHead
                       className={`${thClass} hidden px-3 sm:table-cell`}
-                      onClick={() => handleSort('hackathon')}
+                      aria-sort={getAriaSort('hackathon')}
                     >
-                      Hackathon
-                      <SortIcon
-                        field='hackathon'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                      />
-                    </th>
-                    <th
+                      <button
+                        type='button'
+                        onClick={() => handleSort('hackathon')}
+                        className='flex w-full items-center gap-1 rounded-sm text-xs font-semibold tracking-wider uppercase hover:text-white focus-visible:ring-2 focus-visible:ring-[#a7f950] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0e0c0c] focus-visible:outline-none'
+                        aria-label='Sort by Hackathon'
+                      >
+                        Hackathon
+                        <SortIcon
+                          field='hackathon'
+                          sortField={sortField}
+                          sortDir={sortDir}
+                        />
+                      </button>
+                    </TableHead>
+                    <TableHead
                       className={`${thClass} px-3`}
-                      onClick={() => handleSort('status')}
+                      aria-sort={getAriaSort('status')}
                     >
-                      Status
-                      <SortIcon
-                        field='status'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                      />
-                    </th>
-                    <th
+                      <button
+                        type='button'
+                        onClick={() => handleSort('status')}
+                        className='flex w-full items-center gap-1 rounded-sm text-xs font-semibold tracking-wider uppercase hover:text-white focus-visible:ring-2 focus-visible:ring-[#a7f950] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0e0c0c] focus-visible:outline-none'
+                        aria-label='Sort by Status'
+                      >
+                        Status
+                        <SortIcon
+                          field='status'
+                          sortField={sortField}
+                          sortDir={sortDir}
+                        />
+                      </button>
+                    </TableHead>
+                    <TableHead
                       className={`${thClass} hidden px-3 lg:table-cell`}
-                      onClick={() => handleSort('submittedAt')}
+                      aria-sort={getAriaSort('submittedAt')}
                     >
-                      Submitted
-                      <SortIcon
-                        field='submittedAt'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                      />
-                    </th>
-                    <th
+                      <button
+                        type='button'
+                        onClick={() => handleSort('submittedAt')}
+                        className='flex w-full items-center gap-1 rounded-sm text-xs font-semibold tracking-wider uppercase hover:text-white focus-visible:ring-2 focus-visible:ring-[#a7f950] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0e0c0c] focus-visible:outline-none'
+                        aria-label='Sort by Submitted Date'
+                      >
+                        Submitted
+                        <SortIcon
+                          field='submittedAt'
+                          sortField={sortField}
+                          sortDir={sortDir}
+                        />
+                      </button>
+                    </TableHead>
+                    <TableHead
                       className={`${thClass} hidden px-3 xl:table-cell`}
-                      onClick={() => handleSort('rank')}
+                      aria-sort={getAriaSort('rank')}
                     >
-                      Rank
-                      <SortIcon
-                        field='rank'
-                        sortField={sortField}
-                        sortDir={sortDir}
-                      />
-                    </th>
-                    <th className='py-3 pr-4 pl-3' />
-                  </tr>
-                </thead>
-                <tbody>
+                      <button
+                        type='button'
+                        onClick={() => handleSort('rank')}
+                        className='flex w-full items-center gap-1 rounded-sm text-xs font-semibold tracking-wider uppercase hover:text-white focus-visible:ring-2 focus-visible:ring-[#a7f950] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0e0c0c] focus-visible:outline-none'
+                        aria-label='Sort by Rank'
+                      >
+                        Rank
+                        <SortIcon
+                          field='rank'
+                          sortField={sortField}
+                          sortDir={sortDir}
+                        />
+                      </button>
+                    </TableHead>
+                    <TableHead className='py-3 pr-4 pl-3' />
+                  </ShadcnTableRow>
+                </TableHeader>
+                <TableBody>
                   {sorted.map((submission, i) => (
                     <TableRow
                       key={submission.id}
@@ -283,8 +330,8 @@ export default function SubmissionsPage() {
                       onClick={() => handleRowClick(submission)}
                     />
                   ))}
-                </tbody>
-              </table>
+                </TableBody>
+              </Table>
             </div>
           </motion.div>
         ) : (
