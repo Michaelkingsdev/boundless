@@ -1,28 +1,39 @@
 'use client';
 import Profile from '@/components/profile/update/Profile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { User } from '@/types/user';
 import { getMe } from '@/lib/api/auth';
 import { GetMeResponse } from '@/lib/api/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import Settings from '@/components/profile/update/Settings';
+import { IdentityVerificationSection } from '@/components/didit/IdentityVerificationSection';
+import { invalidateAuthProfileCache } from '@/hooks/use-auth';
+
 const SettingsContent = () => {
   const [userData, setUserData] = useState<GetMeResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const user = await getMe();
-        setUserData(user);
-      } catch {
-        setUserData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    fetchUserData();
+
+  const fetchUserData = useCallback(async () => {
+    try {
+      const user = await getMe();
+      setUserData(user);
+    } catch {
+      setUserData(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    setIsLoading(true);
+    fetchUserData();
+  }, [fetchUserData]);
+
+  const handleVerificationComplete = useCallback(async () => {
+    await fetchUserData();
+    invalidateAuthProfileCache();
+  }, [fetchUserData]);
 
   if (isLoading) {
     return (
@@ -87,12 +98,24 @@ const SettingsContent = () => {
             >
               2FA
             </TabsTrigger>
+            <TabsTrigger
+              value='identity'
+              className='text-sm font-medium text-zinc-400 transition-all data-[state=active]:text-white data-[state=active]:shadow-none'
+            >
+              Identity
+            </TabsTrigger>
           </TabsList>
           <TabsContent value='profile'>
             <Profile user={userData?.user as User} />
           </TabsContent>
           <TabsContent value='settings'>
             <Settings />
+          </TabsContent>
+          <TabsContent value='identity' className='space-y-6'>
+            <IdentityVerificationSection
+              user={userData}
+              onVerificationComplete={handleVerificationComplete}
+            />
           </TabsContent>
         </Tabs>
       </div>

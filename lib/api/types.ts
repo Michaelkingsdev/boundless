@@ -41,6 +41,12 @@ export interface ErrorResponse extends ApiResponse {
   statusCode?: number;
 }
 
+export type IdentityVerificationStatus =
+  | 'Approved'
+  | 'Declined'
+  | 'In Review'
+  | null;
+
 // User type
 export interface UserProfile {
   firstName: string;
@@ -66,6 +72,9 @@ export interface User {
   displayUsername: string;
   metadata?: Record<string, unknown>;
   twoFactorEnabled: boolean;
+  /** Didit identity verification: Approved | Declined | In Review | null */
+  identityVerificationStatus?: IdentityVerificationStatus;
+  identityVerificationAt?: string | null;
   members?: Array<{
     id: string;
     organizationId: string;
