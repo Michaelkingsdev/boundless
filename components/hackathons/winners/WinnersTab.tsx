@@ -22,7 +22,7 @@ import {
 
 interface WinnersTabProps {
   winners: HackathonWinner[];
-  hackathonSlug?: string;
+  hackathonSlug?: string; // Intentionally retained for API consistency/future use
 }
 
 export const WinnersTab = ({ winners }: WinnersTabProps) => {
@@ -116,7 +116,11 @@ const WinnerCard = ({
 
   const projectUrl = winner.projectId
     ? `/projects/${winner.projectId}?type=submission`
-    : null;
+    : winner.submissionId
+      ? `/submissions/${winner.submissionId}`
+      : null;
+
+  const { primaryColor, secondaryColor } = getRibbonColors(winner.rank);
 
   const ProjectContent = (
     <div className='flex items-center justify-between rounded-lg border border-gray-900 bg-black/20 p-2 transition-colors hover:bg-black/40'>
@@ -180,7 +184,7 @@ const WinnerCard = ({
                   profileUrl ? 'transition-transform hover:scale-105' : ''
                 )}
               >
-                <AvatarImage src={p.avatar} alt={p.username} />
+                <AvatarImage src={p.avatar} alt={p.username || 'Participant'} />
                 <AvatarFallback className='bg-gray-800 text-lg text-white uppercase'>
                   {p.username?.charAt(0) || '?'}
                 </AvatarFallback>
@@ -196,7 +200,7 @@ const WinnerCard = ({
                 {AvatarElement}
               </Link>
             ) : (
-              <div key={i} className='z-[1]'>
+              <div key={`${p.username}-${i}`} className='z-[1]'>
                 {AvatarElement}
               </div>
             );
@@ -206,8 +210,8 @@ const WinnerCard = ({
         {/* Ribbon */}
         <div className='relative flex items-center justify-center py-2'>
           <Ribbon
-            primaryColor={getRibbonColors(winner.rank).primaryColor}
-            secondaryColor={getRibbonColors(winner.rank).secondaryColor}
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
             className='w-48'
           />
           <div className='absolute inset-0 flex items-center justify-center pb-2 pl-[1px] text-[10px] font-black tracking-tight text-white uppercase'>
@@ -228,7 +232,12 @@ const WinnerCard = ({
 
       {/* Project Link */}
       {projectUrl ? (
-        <Link href={projectUrl} target='_blank' className='block no-underline'>
+        <Link
+          href={projectUrl}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='block no-underline'
+        >
           {ProjectContent}
         </Link>
       ) : (
