@@ -4,15 +4,28 @@ import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { HackathonWinner } from '@/lib/api/hackathons';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Trophy, ArrowUpRight } from 'lucide-react';
 import { motion } from 'motion/react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from '@/components/ui/tooltip';
+import { cn } from '@/lib/utils';
+import Ribbon from '@/components/svg/Ribbon';
+import {
+  getRibbonColors,
+  getRibbonText,
+} from '@/components/organization/hackathons/rewards/winnersUtils';
 
 interface WinnersTabProps {
   winners: HackathonWinner[];
-  hackathonSlug?: string;
+  hackathonSlug?: string; // Intentionally retained for API consistency/future use
 }
 
-export const WinnersTab = ({ winners, hackathonSlug }: WinnersTabProps) => {
+export const WinnersTab = ({ winners }: WinnersTabProps) => {
   if (!winners || winners.length === 0) {
     return (
       <div className='flex min-h-[400px] flex-col items-center justify-center text-center'>
@@ -28,146 +41,230 @@ export const WinnersTab = ({ winners, hackathonSlug }: WinnersTabProps) => {
     );
   }
 
-  // Sort by rank just in case
+  // Sort by rank
   const sortedWinners = [...winners].sort((a, b) => a.rank - b.rank);
 
+  // Split into podium (1-3) and others
+  const podiumWinners = sortedWinners.filter(w => w.rank <= 3);
+  const otherWinners = sortedWinners.filter(w => w.rank > 3);
+
+  // Reorder podium to 2, 1, 3 for visual hierarchy
+  const getPodiumOrder = (winners: HackathonWinner[]) => {
+    if (winners.length < 2) return winners;
+    const first = winners.find(w => w.rank === 1);
+    const second = winners.find(w => w.rank === 2);
+    const third = winners.find(w => w.rank === 3);
+
+    return [second, first, third].filter(
+      (w): w is HackathonWinner => w !== undefined
+    );
+  };
+
+  const podiumToDisplay = getPodiumOrder(podiumWinners);
+
+  const getPodiumGridCols = (count: number) => {
+    if (count === 1) return 'mx-auto max-w-sm grid-cols-1';
+    if (count === 2) return 'mx-auto max-w-2xl grid-cols-1 md:grid-cols-2';
+    return 'grid-cols-1 md:grid-cols-3';
+  };
+
   return (
-    <div className='space-y-8'>
-      <div className='grid gap-6 md:grid-cols-2 lg:grid-cols-3'>
-        {sortedWinners.map((winner, index) => (
-          <WinnerCard
-            key={`${winner.rank}-${winner.projectName}`}
-            winner={winner}
-            index={index}
-            hackathonSlug={hackathonSlug}
-          />
-        ))}
-      </div>
+    <div className='space-y-12 py-8'>
+      {/* Podium Section */}
+      {podiumToDisplay.length > 0 && (
+        <div
+          className={cn(
+            'grid gap-6 md:gap-8',
+            getPodiumGridCols(podiumToDisplay.length)
+          )}
+        >
+          {podiumToDisplay.map(winner => (
+            <WinnerCard
+              key={`${winner.submissionId}-${winner.rank}`}
+              winner={winner}
+              isPodium
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Grid Section for Ranks 4+ */}
+      {otherWinners.length > 0 && (
+        <div className='grid gap-6 sm:grid-cols-2 lg:grid-cols-3'>
+          {otherWinners.map(winner => (
+            <WinnerCard
+              key={`${winner.submissionId}-${winner.rank}`}
+              winner={winner}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 };
 
 const WinnerCard = ({
   winner,
-  index,
-  hackathonSlug,
+  isPodium = false,
 }: {
   winner: HackathonWinner;
-  index: number;
-  hackathonSlug?: string;
+  isPodium?: boolean;
 }) => {
-  const getRankIcon = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return <Trophy className='h-6 w-6 text-yellow-500' />;
-      case 2:
-        return <Medal className='h-6 w-6 text-gray-300' />;
-      case 3:
-        return <Medal className='h-6 w-6 text-amber-600' />;
-      default:
-        return <Award className='h-6 w-6 text-blue-500' />;
-    }
+  const getScaleClass = () => {
+    if (!isPodium) return '';
+    if (winner.rank === 1) return 'md:scale-110 z-10';
+    return 'md:scale-95 opacity-90';
   };
 
-  const getRankColor = (rank: number) => {
-    switch (rank) {
-      case 1:
-        return 'border-yellow-500/50 bg-yellow-500/5 hover:border-yellow-500';
-      case 2:
-        return 'border-gray-300/50 bg-gray-300/5 hover:border-gray-300';
-      case 3:
-        return 'border-amber-600/50 bg-amber-600/5 hover:border-amber-600';
-      default:
-        return 'border-white/10 bg-white/5 hover:border-white/20';
-    }
-  };
+  const projectUrl = winner.submissionId
+    ? `/projects/${winner.submissionId}?type=submission`
+    : winner.slug
+      ? `/projects/${winner.slug}`
+      : winner.projectId
+        ? `/projects/${winner.projectId}`
+        : null;
 
-  const CardContent = (
-    <div
-      className={`group relative h-full overflow-hidden rounded-xl border p-6 transition-all duration-300 ${getRankColor(
-        winner.rank
-      )}`}
-    >
-      <div className='mb-4 flex items-start justify-between'>
-        <div className='flex h-12 w-12 items-center justify-center rounded-full bg-white/10'>
-          {getRankIcon(winner.rank)}
+  const { primaryColor, secondaryColor } = getRibbonColors(winner.rank);
+
+  const ProjectContent = (
+    <div className='flex items-center justify-between rounded-lg border border-gray-900 bg-black/20 p-2 transition-colors hover:bg-black/40'>
+      <div className='grid grid-cols-[44px_1fr] grid-rows-2 gap-x-2'>
+        <div className='row-span-2 h-11 w-11 overflow-hidden rounded bg-gray-800'>
+          {/* Fallback to trophy if no project image is available in HackathonWinner type */}
+          <div className='flex h-full w-full items-center justify-center p-2'>
+            <Trophy className='h-6 w-6 text-yellow-500/20' />
+          </div>
         </div>
-        <div className='rounded-full bg-white/10 px-3 py-1 text-sm font-medium text-white'>
-          Rank #{winner.rank}
+        <div className='flex items-center gap-1 overflow-hidden'>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className='line-clamp-1 cursor-help text-sm font-medium text-white'>
+                {winner.projectName}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent side='top' className='max-w-xs'>
+              <p className='break-words'>{winner.projectName}</p>
+            </TooltipContent>
+          </Tooltip>
+          <Badge className='bg-office-brown border-office-brown-darker text-office-brown-darker shrink-0 rounded-[4px] border px-1 py-0.5 text-[10px] font-medium'>
+            Project
+          </Badge>
         </div>
-      </div>
-
-      <h3 className='mb-2 text-xl font-bold text-white group-hover:text-blue-400'>
-        {winner.projectName}
-      </h3>
-
-      <div className='mb-4 flex items-center gap-2'>
-        <div className='flex -space-x-2'>
-          {winner.participants.map((p, i) => (
-            <div
-              key={i}
-              className='relative h-8 w-8 overflow-hidden rounded-full border-2 border-black bg-gray-800'
-              title={p.username}
-            >
-              {p.avatar ? (
-                <Image
-                  src={p.avatar}
-                  alt={p.username}
-                  fill
-                  className='object-cover'
-                />
-              ) : (
-                <div className='flex h-full w-full items-center justify-center text-xs text-white'>
-                  {p.username.charAt(0).toUpperCase()}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        <span className='text-sm text-gray-400'>
-          {winner.teamName ||
-            (winner.participants.length === 1
-              ? winner.participants[0].username
-              : 'Team')}
-        </span>
-      </div>
-
-      <div className='mt-auto border-t border-white/10 pt-4'>
-        <div className='flex items-center justify-between'>
-          <span className='text-sm text-gray-400'>Prize</span>
-          <span className='font-semibold text-white'>{winner.prize}</span>
+        <div className='flex items-center gap-2 text-[10px] text-gray-500'>
+          <span>Submission</span>
+          <div className='h-2 w-px bg-gray-900' />
+          <ArrowUpRight className='h-3 w-3' />
         </div>
       </div>
     </div>
   );
 
-  if (winner.projectId) {
-    return (
-      <Link
-        href={`/projects/${winner.projectId}?type=submission`}
-        target='_blank'
-        className='block h-full no-underline'
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3, delay: index * 0.1 }}
-          className='h-full'
-        >
-          {CardContent}
-        </motion.div>
-      </Link>
-    );
-  }
-
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3, delay: index * 0.1 }}
-      className='h-full'
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.4 }}
+      className={cn(
+        'bg-background-card relative w-full overflow-hidden rounded-xl border border-white/5 p-5 transition-all duration-300 hover:border-white/10',
+        getScaleClass()
+      )}
     >
-      {CardContent}
+      {/* Prize Header */}
+      <div className='mb-4 flex items-center justify-center gap-2'>
+        <div className='flex items-center gap-1.5 rounded-full border border-[#2775CA]/20 bg-[#2775CA]/10 px-3 py-1'>
+          <Trophy className='h-4 w-4 text-yellow-500' />
+          <span className='text-sm font-bold text-white uppercase'>
+            {(() => {
+              const prize = winner.prize || '';
+              const match = prize.match(
+                /^(?:USDC)?\s*(\d+(?:\.\d+)?)\s*(?:USDC)?$/i
+              );
+              return match ? `${match[1]} USDC` : prize;
+            })()}
+          </span>
+        </div>
+      </div>
+
+      {/* Ranks/Participants */}
+      <div className='mb-4 flex flex-col items-center justify-center gap-3'>
+        <div className='flex -space-x-3'>
+          {winner.participants.map((p, i) => {
+            const profileUrl = p.username ? `/profile/${p.username}` : null;
+            const AvatarElement = (
+              <Avatar
+                className={cn(
+                  'border-background h-16 w-16 border-2 shadow-xl',
+                  profileUrl ? 'transition-transform hover:scale-105' : ''
+                )}
+              >
+                <AvatarImage src={p.avatar} alt={p.username || 'Participant'} />
+                <AvatarFallback className='bg-gray-800 text-lg text-white uppercase'>
+                  {p.username?.charAt(0) || '?'}
+                </AvatarFallback>
+              </Avatar>
+            );
+
+            return profileUrl ? (
+              <Link
+                key={`${p.username}-${i}`}
+                href={profileUrl}
+                className='z-[1]'
+              >
+                {AvatarElement}
+              </Link>
+            ) : (
+              <div key={`${p.username}-${i}`} className='z-[1]'>
+                {AvatarElement}
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Ribbon */}
+        <div className='relative flex items-center justify-center py-2'>
+          <Ribbon
+            primaryColor={primaryColor}
+            secondaryColor={secondaryColor}
+            className='w-48'
+          />
+          <div className='absolute inset-0 flex items-center justify-center pb-2 pl-[1px] text-[10px] font-black tracking-tight text-white uppercase'>
+            {getRibbonText(winner.rank)}
+          </div>
+        </div>
+
+        {/* Team/Participant Name */}
+        <div className='text-center'>
+          <h3 className='text-sm font-semibold text-white'>
+            {winner.teamName ||
+              (winner.participants.length === 1 &&
+              winner.participants[0].username ? (
+                <Link
+                  href={`/profile/${winner.participants[0].username}`}
+                  className='transition-colors hover:text-blue-400'
+                >
+                  {winner.participants[0].username}
+                </Link>
+              ) : (
+                'Team'
+              ))}
+          </h3>
+        </div>
+      </div>
+
+      {/* Project Link */}
+      {projectUrl ? (
+        <Link
+          href={projectUrl}
+          target='_blank'
+          rel='noopener noreferrer'
+          className='block no-underline'
+        >
+          {ProjectContent}
+        </Link>
+      ) : (
+        <div className='block'>{ProjectContent}</div>
+      )}
     </motion.div>
   );
 };
