@@ -62,6 +62,12 @@ export const WinnersTab = ({ winners }: WinnersTabProps) => {
 
   const podiumToDisplay = getPodiumOrder(podiumWinners);
 
+  const getPodiumGridCols = (count: number) => {
+    if (count === 1) return 'mx-auto max-w-sm grid-cols-1';
+    if (count === 2) return 'mx-auto max-w-2xl grid-cols-1 md:grid-cols-2';
+    return 'grid-cols-1 md:grid-cols-3';
+  };
+
   return (
     <div className='space-y-12 py-8'>
       {/* Podium Section */}
@@ -69,11 +75,7 @@ export const WinnersTab = ({ winners }: WinnersTabProps) => {
         <div
           className={cn(
             'grid gap-6 md:gap-8',
-            podiumToDisplay.length === 1
-              ? 'mx-auto max-w-sm grid-cols-1'
-              : podiumToDisplay.length === 2
-                ? 'mx-auto max-w-2xl grid-cols-1 md:grid-cols-2'
-                : 'grid-cols-1 md:grid-cols-3'
+            getPodiumGridCols(podiumToDisplay.length)
           )}
         >
           {podiumToDisplay.map(winner => (
@@ -116,9 +118,7 @@ const WinnerCard = ({
 
   const projectUrl = winner.projectId
     ? `/projects/${winner.projectId}?type=submission`
-    : winner.submissionId
-      ? `/submissions/${winner.submissionId}`
-      : null;
+    : null;
 
   const { primaryColor, secondaryColor } = getRibbonColors(winner.rank);
 
@@ -223,9 +223,17 @@ const WinnerCard = ({
         <div className='text-center'>
           <h3 className='text-sm font-semibold text-white'>
             {winner.teamName ||
-              (winner.participants.length === 1
-                ? winner.participants[0].username
-                : 'Team')}
+              (winner.participants.length === 1 &&
+              winner.participants[0].username ? (
+                <Link
+                  href={`/profile/${winner.participants[0].username}`}
+                  className='transition-colors hover:text-blue-400'
+                >
+                  {winner.participants[0].username}
+                </Link>
+              ) : (
+                'Team'
+              ))}
           </h3>
         </div>
       </div>
