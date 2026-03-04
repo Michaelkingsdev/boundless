@@ -2,21 +2,28 @@
 
 import { useState, useCallback } from 'react';
 import { deleteHackathon } from '@/lib/api/hackathons';
+import { deleteDraft } from '@/lib/api/hackathons/draft';
 import { useAuthStatus } from '@/hooks/use-auth';
 import { toast } from 'sonner';
+
+type DeleteType = 'draft' | 'hackathon';
 
 interface UseDeleteHackathonOptions {
   organizationId: string;
   hackathonId: string;
+  type: DeleteType;
   onSuccess?: () => void;
   onError?: (error: string) => void;
+  suppressToast?: boolean;
 }
 
 export function useDeleteHackathon({
   organizationId,
   hackathonId,
+  type,
   onSuccess,
   onError,
+  suppressToast = false,
 }: UseDeleteHackathonOptions) {
   const { isAuthenticated } = useAuthStatus();
   const [isDeleting, setIsDeleting] = useState(false);
@@ -37,10 +44,18 @@ export function useDeleteHackathon({
     setError(null);
 
     try {
-      const response = await deleteHackathon(hackathonId);
+      let response;
+
+      if (type === 'draft') {
+        response = await deleteDraft(hackathonId, organizationId);
+      } else {
+        response = await deleteHackathon(hackathonId);
+      }
 
       if (response.success) {
-        toast.success('Hackathon deleted successfully');
+        if (!suppressToast) {
+          toast.success('Hackathon deleted successfully');
+        }
         onSuccess?.();
         return response.data;
       } else {
@@ -50,13 +65,15 @@ export function useDeleteHackathon({
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete hackathon';
       setError(errorMessage);
-      toast.error(errorMessage);
+      if (!suppressToast) {
+        toast.error(errorMessage);
+      }
       onError?.(errorMessage);
       throw err;
     } finally {
       setIsDeleting(false);
     }
-  }, [organizationId, hackathonId, isAuthenticated, onSuccess, onError]);
+  }, [organizationId, hackathonId, isAuthenticated, type, onSuccess, onError]);
 
   return {
     isDeleting,

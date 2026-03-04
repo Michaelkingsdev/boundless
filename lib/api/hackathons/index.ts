@@ -25,7 +25,6 @@ export type {
   HackathonStatistics,
   TimeSeriesDataPoint,
   HackathonTimeSeriesData,
-  RegistrationDeadlinePolicy,
   PublishHackathonRequest,
   UpdateHackathonRequest,
   // Draft types
@@ -72,7 +71,6 @@ export {
 
 // Re-export all API functions and response types
 export * from './core';
-export * from './draft';
 export * from './participants';
 export * from './judging';
 export * from './rewards';
