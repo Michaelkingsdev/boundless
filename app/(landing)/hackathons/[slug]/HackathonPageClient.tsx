@@ -159,6 +159,7 @@ export default function HackathonPageClient() {
       tabs.push({
         id: 'winners',
         label: 'Winners',
+        badge: winners.length,
       });
     }
 

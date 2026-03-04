@@ -116,9 +116,13 @@ const WinnerCard = ({
     return 'md:scale-95 opacity-90';
   };
 
-  const projectUrl = winner.projectId
-    ? `/projects/${winner.projectId}?type=submission`
-    : null;
+  const projectUrl = winner.submissionId
+    ? `/projects/${winner.submissionId}?type=submission`
+    : winner.slug
+      ? `/projects/${winner.slug}`
+      : winner.projectId
+        ? `/projects/${winner.projectId}`
+        : null;
 
   const { primaryColor, secondaryColor } = getRibbonColors(winner.rank);
 
@@ -168,8 +172,18 @@ const WinnerCard = ({
     >
       {/* Prize Header */}
       <div className='mb-4 flex items-center justify-center gap-2'>
-        <Trophy className='h-4 w-4 text-yellow-500' />
-        <span className='text-sm font-bold text-white'>{winner.prize}</span>
+        <div className='flex items-center gap-1.5 rounded-full border border-[#2775CA]/20 bg-[#2775CA]/10 px-3 py-1'>
+          <Trophy className='h-4 w-4 text-yellow-500' />
+          <span className='text-sm font-bold text-white uppercase'>
+            {(() => {
+              const prize = winner.prize || '';
+              const match = prize.match(
+                /^(?:USDC)?\s*(\d+(?:\.\d+)?)\s*(?:USDC)?$/i
+              );
+              return match ? `${match[1]} USDC` : prize;
+            })()}
+          </span>
+        </div>
       </div>
 
       {/* Ranks/Participants */}
